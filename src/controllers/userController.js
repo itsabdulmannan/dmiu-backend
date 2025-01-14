@@ -49,7 +49,7 @@ const userController = {
                 phone,
                 password: hashedPassword,
                 role: 'author',
-                isVerified: false,
+                isVerified: true,
                 otp: generateOtp
             });
 

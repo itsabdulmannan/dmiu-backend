@@ -78,7 +78,6 @@ const paperController = {
     getAllPapers: async (req, res) => {
         try {
             const { id, archive, inPress } = req.query;
-            console.log("id:", id, "archive:", archive, "inPress:", inPress);
 
             if (id) {
                 const papers = await paper.findByPk(id);
@@ -88,30 +87,23 @@ const paperController = {
                 return res.status(200).json(papers);
             }
 
-            let condition = {};
+            let condition = { paperStatus: 'published' };
             const currentDate = new Date();
             const thirtyDaysAgo = new Date(currentDate);
             thirtyDaysAgo.setDate(currentDate.getDate() - 30);
             const oneMonthAgoStart = new Date(currentDate);
             oneMonthAgoStart.setDate(currentDate.getDate() - 30);
 
-            console.log("Current Date:", currentDate);
-            console.log("Thirty Days Ago:", thirtyDaysAgo);
-            console.log("One Month Ago Start:", oneMonthAgoStart);
-
             if (archive === 'true') {
                 condition.created_at = { [Op.lt]: thirtyDaysAgo };
-                console.log("Fetching papers older than 30 days (archive).");
             }
             else if (inPress === 'true') {
                 condition.created_at = { [Op.gt]: oneMonthAgoStart };
-                console.log("Fetching papers from the last 30 days (inPress).");
             }
 
             const papersList = await paper.findAll({ where: condition });
 
             if (papersList.length === 0) {
-                console.log("No papers found with condition:", condition);
                 return res.status(404).json({ message: 'No papers found matching the criteria.' });
             }
 

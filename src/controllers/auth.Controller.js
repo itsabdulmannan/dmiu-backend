@@ -40,7 +40,6 @@ const authController = {
             res.status(500).json({ error: error.message });
         }
     },
-
     loginAuthor: async (req, res) => {
         try {
             const { email, password } = req.body;

@@ -34,7 +34,6 @@ const userController = {
                 return res.status(400).json({ status: false, message: 'User already exists' });
             }
 
-            const generateOtp = generateOTP();
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -49,26 +48,7 @@ const userController = {
                 phone,
                 password: hashedPassword,
                 role: 'author',
-                isVerified: true,
-                otp: generateOtp
             });
-
-            if (email) {
-                const mailOptions = {
-                    from: process.env.SMTP_MAIL,
-                    to: email,
-                    subject: "OTP for email verification",
-                    text: `Your OTP for email verification is ${generateOtp}. Please verify your email address.`,
-                };
-
-                try {
-                    await transporter.sendMail(mailOptions);
-                    console.log("Email sent successfully to: " + email);
-                } catch (mailError) {
-                    console.error("Error while sending email", mailError);
-                    return res.status(500).json({ status: false, message: "Failed to send verification email" });
-                }
-            }
 
             return res.status(201).json({ status: true, message: "User created successfully", data: user });
         } catch (error) {

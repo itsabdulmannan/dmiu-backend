@@ -15,11 +15,6 @@ const authController = {
             if (!user) {
                 return res.status(401).json({ error: 'User not found' });
             }
-
-            if (!user.isVerified) {
-                return res.status(403).json({ error: 'User is not verified. Please verify your account before logging in.' });
-            }
-
             if (user.role !== 'chiefEditor' && user.role !== 'sectionHead') {
                 return res.status(403).json({ error: 'Access denied. Admin access required.' });
             }

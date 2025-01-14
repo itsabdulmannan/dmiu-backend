@@ -7,16 +7,28 @@ const User = sequelize.define('user', {
         primaryKey: true,
         autoIncrement: true
     },
-    firstName: {
+    title: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    country: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    firstName: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
     lastName: {
         type: DataTypes.STRING,
         allowNull: true
     },
-    dateOfBirth: {
-        type: DataTypes.DATE,
+    specialization: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    affiliation: {
+        type: DataTypes.STRING,
         allowNull: true
     },
     email: {
@@ -24,29 +36,17 @@ const User = sequelize.define('user', {
         unique: true,
         allowNull: false
     },
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     password: {
         type: DataTypes.STRING,
         allowNull: false
     },
     role: {
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM('author', 'cheifEditor', 'sectionhead'),
         allowNull: false
-    },
-    contactNo: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    address: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    city: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    profileImage: {
-        type: DataTypes.STRING,
-        allowNull: true
     },
     isVerified: {
         type: DataTypes.BOOLEAN,

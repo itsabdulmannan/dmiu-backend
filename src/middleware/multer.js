@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const uploadPath = path.resolve(__dirname, '../../public/images');
+const uploadPath = path.resolve(__dirname, '../../public/assets');
 
 if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
@@ -21,7 +21,13 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        const acceptedFileTypes = ['image/jpeg', 'image/png'];
+        const acceptedFileTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'image/jpeg',
+            'image/png',
+        ];
         if (acceptedFileTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {

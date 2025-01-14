@@ -11,6 +11,7 @@ const authenticate = async function (req, res, next) {
     const tokenWithoutBearer = token.split(" ")[1];
     const tokenData = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET_KEY);
     const user = await User.findOne({ where: { email: tokenData.email } });
+    console.log(user)
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }

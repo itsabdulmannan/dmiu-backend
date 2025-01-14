@@ -10,16 +10,28 @@ module.exports = {
         autoIncrement: true,
         primaryKey: true,
       },
-      firstName: {
+      title: {
         type: Sequelize.STRING,
         allowNull: true,
+      },
+      country: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      firstName: {
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       lastName: {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      dateOfBirth: {
-        type: Sequelize.DATE,
+      specialization: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      affiliation: {
+        type: Sequelize.STRING,
         allowNull: true,
       },
       email: {
@@ -27,29 +39,17 @@ module.exports = {
         unique: true,
         allowNull: false,
       },
+      phone: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       password: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       role: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM('author', 'cheifEditor', 'sectionhead'),
         allowNull: false,
-      },
-      contactNo: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      address: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      city: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      profileImage: {
-        type: Sequelize.STRING,
-        allowNull: true,
       },
       isVerified: {
         type: Sequelize.BOOLEAN,
@@ -74,5 +74,5 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('users');
-  }
+  },
 };

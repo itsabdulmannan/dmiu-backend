@@ -4,8 +4,7 @@ const sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME
     host: process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
     logging: false,
-    timezone: '+00:00',
-    keepAlive: true,
+    timezone: '+00:00'
 });
 
 sequelize.authenticate()

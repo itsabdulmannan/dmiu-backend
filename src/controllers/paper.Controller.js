@@ -1,9 +1,9 @@
 const paper = require('../models/paper.Model');
+const { Op } = require('sequelize');
 
 const paperController = {
     addPaper: async (req, res) => {
         console.log("FunctionCalled");
-
         try {
             const {
                 manuScriptTitle,
@@ -77,7 +77,8 @@ const paperController = {
     },
     getAllPapers: async (req, res) => {
         try {
-            const { id } = req.query
+            const { id, archive, inPress } = req.query;
+
             if (id) {
                 const papers = await paper.findByPk(id);
                 if (!papers) {
@@ -85,8 +86,30 @@ const paperController = {
                 }
                 return res.status(200).json(papers);
             }
-            const papersList = await paper.findAll();
+
+            let condition = {};
+            const currentDate = new Date();
+            const thirtyDaysAgo = new Date(currentDate);
+            thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+
+            if (archive) {
+                condition = { createdAt: { [Op.lt]: thirtyDaysAgo } };
+            } else if (inPress) {
+                const oneMonthAgoStart = new Date(thirtyDaysAgo);
+                oneMonthAgoStart.setHours(0, 0, 0, 0);
+                const oneMonthAgoEnd = new Date(thirtyDaysAgo);
+                oneMonthAgoEnd.setHours(23, 59, 59, 999);
+
+                condition = {
+                    createdAt: {
+                        [Op.between]: [oneMonthAgoStart, oneMonthAgoEnd]
+                    }
+                };
+            }
+
+            const papersList = await paper.findAll({ where: condition });
             return res.status(200).json(papersList);
+
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: 'Server error', error: error.message });

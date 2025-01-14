@@ -199,7 +199,7 @@ paperRouter.post('/create', upload.fields([
  * @swagger
  * /papers/get:
  *   get:
- *     summary: Get all papers or a paper by ID
+ *     summary: Get all papers, papers by ID, or filtered papers by archive or inPress
  *     tags: [Papers]
  *     parameters:
  *       - in: query
@@ -207,6 +207,16 @@ paperRouter.post('/create', upload.fields([
  *         schema:
  *           type: string
  *         description: Paper ID
+ *       - in: query
+ *         name: archive
+ *         schema:
+ *           type: boolean
+ *         description: Set to true to retrieve papers older than 30 days
+ *       - in: query
+ *         name: inPress
+ *         schema:
+ *           type: boolean
+ *         description: Set to true to retrieve papers posted exactly 30 days ago
  *     responses:
  *       200:
  *         description: A list of papers or a single paper
@@ -221,6 +231,7 @@ paperRouter.post('/create', upload.fields([
  *       500:
  *         description: Internal server error
  */
+
 paperRouter.get('/get', paperController.getAllPapers);
 
 /**

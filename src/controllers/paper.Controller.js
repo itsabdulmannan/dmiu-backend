@@ -78,6 +78,7 @@ const paperController = {
     getAllPapers: async (req, res) => {
         try {
             const { id, archive, inPress } = req.query;
+            console.log("id:", id, "archive:", archive, "inPress:", inPress);
 
             if (id) {
                 const papers = await paper.findByPk(id);
@@ -91,27 +92,33 @@ const paperController = {
             const currentDate = new Date();
             const thirtyDaysAgo = new Date(currentDate);
             thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+            const oneMonthAgoStart = new Date(currentDate);
+            oneMonthAgoStart.setDate(currentDate.getDate() - 30);
 
-            if (archive) {
-                condition = { createdAt: { [Op.lt]: thirtyDaysAgo } };
-            } else if (inPress) {
-                const oneMonthAgoStart = new Date(thirtyDaysAgo);
-                oneMonthAgoStart.setHours(0, 0, 0, 0);
-                const oneMonthAgoEnd = new Date(thirtyDaysAgo);
-                oneMonthAgoEnd.setHours(23, 59, 59, 999);
+            console.log("Current Date:", currentDate);
+            console.log("Thirty Days Ago:", thirtyDaysAgo);
+            console.log("One Month Ago Start:", oneMonthAgoStart);
 
-                condition = {
-                    createdAt: {
-                        [Op.between]: [oneMonthAgoStart, oneMonthAgoEnd]
-                    }
-                };
+            if (archive === 'true') {
+                condition.created_at = { [Op.lt]: thirtyDaysAgo };
+                console.log("Fetching papers older than 30 days (archive).");
+            }
+            else if (inPress === 'true') {
+                condition.created_at = { [Op.gt]: oneMonthAgoStart };
+                console.log("Fetching papers from the last 30 days (inPress).");
             }
 
             const papersList = await paper.findAll({ where: condition });
+
+            if (papersList.length === 0) {
+                console.log("No papers found with condition:", condition);
+                return res.status(404).json({ message: 'No papers found matching the criteria.' });
+            }
+
             return res.status(200).json(papersList);
 
         } catch (error) {
-            console.error(error);
+            console.error("Error occurred while fetching papers:", error);
             return res.status(500).json({ message: 'Server error', error: error.message });
         }
     },

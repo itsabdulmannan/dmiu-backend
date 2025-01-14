@@ -48,7 +48,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *         description: Bad Request
  */
 
-authRouter.post('/login', authController.loginAuthor);
+authRouter.post('/login-author', authController.loginAuthor);
 
 /**
  * @swagger
@@ -88,7 +88,7 @@ authRouter.post('/login', authController.loginAuthor);
  *       400:
  *         description: Bad Request
  */
-authRouter.post('/login', authController.loginAdmin);
+authRouter.post('/login-admin', authController.loginAdmin);
 
 /**
  * @swagger

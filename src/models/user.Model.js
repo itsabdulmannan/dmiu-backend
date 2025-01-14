@@ -48,13 +48,6 @@ const User = sequelize.define('user', {
         type: DataTypes.ENUM('author', 'cheifEditor', 'sectionhead'),
         allowNull: false
     },
-    isVerified: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
-    },
-    otp: {
-        type: DataTypes.STRING
-    }
 }, {
     timestamps: true,
     tableName: 'users',

@@ -15,7 +15,7 @@ const authController = {
             if (!user) {
                 return res.status(401).json({ error: 'User not found' });
             }
-            if (user.role !== 'chiefEditor' && user.role !== 'sectionhead') {
+            if (user.role !== 'cheifEditor' && user.role !== 'sectionhead') {
                 return res.status(403).json({ error: 'Access denied. Admin access required.' });
             }
 

@@ -21,7 +21,6 @@ module.exports = {
       email: process.env.ADMIN_EMAIL,
       role: process.env.ADMIN_ROLE,
       password: await bcrypt.hash(process.env.ADMIN_PASSWORD, 10),
-      isVerified: true,
       createdAt: new Date(),
       updatedAt: new Date()
     }], {});

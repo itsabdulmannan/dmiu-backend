@@ -7,6 +7,10 @@ const papers = sequelize.define('papers', {
         primaryKey: true,
         autoIncrement: true
     },
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
     manuScriptTitle: {
         type: DataTypes.STRING,
         allowNull: false
@@ -82,9 +86,9 @@ const papers = sequelize.define('papers', {
         }
     },
     paperStatus: {
-        type: DataTypes.ENUM('submitted', 'underReview', 'accepted', 'rejected', 'pending'),
+        type: DataTypes.ENUM('submitted', 'underReview', 'published', 'rejected'),
         allowNull: false,
-        defaultValue: 'pending'
+        defaultValue: 'submitted'
     },
     statusHistory: {
         type: DataTypes.JSONB,

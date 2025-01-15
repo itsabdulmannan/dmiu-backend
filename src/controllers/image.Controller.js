@@ -5,7 +5,6 @@ const handleImage = {
             if (!req.file) {
                 return res.status(400).json({ message: 'Please upload a file' });
             }
-            console.log(req.file);
             const imageUrl = `/images/${req.file.filename}`
 
             return res.status(200).json({ status: true, message: "Image uploaded successfully.", imageUrl });

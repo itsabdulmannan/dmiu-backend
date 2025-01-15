@@ -1,6 +1,7 @@
 const express = require('express');
 const paperController = require('../controllers/paper.Controller');
 const upload = require('../middleware/multer');
+const { authenticate, authorize } = require('../middleware/auth');
 const paperRouter = express.Router();
 
 /**
@@ -193,7 +194,7 @@ paperRouter.post('/create', upload.fields([
     { name: 'mainManuscript', maxCount: 1 },
     { name: 'coverLetter', maxCount: 1 },
     { name: 'supplementaryFile', maxCount: 1 }
-]), paperController.addPaper);
+]), authenticate, authorize('author'), paperController.addPaper);
 
 /**
  * @swagger
@@ -236,12 +237,11 @@ paperRouter.get('/get', paperController.getAllPapers);
 
 /**
  * @swagger
- * /paper/updateStatus:
+ * /papers/updateStatus:
  *   put:
- *     summary: Update the status of a paper
+ *     summary: Update the status of a paper For The Chief Editor
  *     description: Allows a chief editor to update the status of a paper, including adding comments and a date to the status history.
- *     tags:
- *       - Papers
+ *     tags: [SectionHeads And Cheif Editor]
  *     requestBody:
  *       required: true
  *       content:
@@ -251,7 +251,6 @@ paperRouter.get('/get', paperController.getAllPapers);
  *             required:
  *               - paperID
  *               - status
- *               - userId
  *             properties:
  *               paperID:
  *                 type: integer
@@ -270,10 +269,12 @@ paperRouter.get('/get', paperController.getAllPapers);
  *                 format: date-time
  *                 description: Optional date of the status change
  *                 example: 2025-01-10T12:00:00Z
- *               userId:
- *                 type: integer
- *                 description: ID of the user attempting the status update
- *                 example: 42
+ *               sectionHeadIds:
+ *                 type: array
+ *                 description: List of section head IDs to assign the paper to when status is 'assigned'
+ *                 items:
+ *                   type: integer
+ *                   example: 5
  *     responses:
  *       200:
  *         description: Paper status updated successfully
@@ -319,7 +320,101 @@ paperRouter.get('/get', paperController.getAllPapers);
  *                   type: string
  *                   example: Detailed error message
  */
-paperRouter.post('/updateStatus', paperController.updatePaperStatus);
+
+paperRouter.put('/updateStatus', authenticate, authorize('cheifEditor'), paperController.updatePaperStatusForCheifEditor);
+
+/**
+ * @swagger
+ * /papers/updateStatusForSectionHead:
+ *   put:
+ *     summary: Update the status of a paper by a Section Head and assign to section heads
+ *     description: Allows a section head to update the status of a paper (e.g., assign it to themselves or others for review).
+ *     tags:
+ *       - SectionHeads
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - paperID
+ *               - status
+ *             properties:
+ *               paperID:
+ *                 type: integer
+ *                 description: ID of the paper to update
+ *                 example: 1
+ *               status:
+ *                 type: string
+ *                 description: Status to update the paper to (e.g., 'assigned')
+ *                 example: assigned
+ *               comment:
+ *                 type: string
+ *                 description: Optional comment about the status change
+ *                 example: Assigned for review
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Optional date of the status change
+ *                 example: 2025-01-15T12:00:00Z
+ *     responses:
+ *       200:
+ *         description: Paper status updated and section head(s) assigned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Paper status updated and section head(s) assigned successfully
+ *       400:
+ *         description: Invalid request parameters (e.g., missing section head IDs or invalid status)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid status or missing section head IDs
+ *       403:
+ *         description: User is not authorized to update the paper status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Only a section head can update the paper status
+ *       404:
+ *         description: Paper not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Paper not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ *                 error:
+ *                   type: string
+ *                   example: Detailed error message
+ */
+
+paperRouter.put('/updateStatusForSectionHead', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
 
 /**
  * @swagger

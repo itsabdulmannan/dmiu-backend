@@ -76,8 +76,8 @@ userRouter.post('/create', userController.createUser);
  * @swagger
  * /users/get:
  *   get:
- *     summary: Get a user by ID
- *     description: Fetch a user's details by their ID (ID passed as query parameter).
+ *     summary: Get users by ID or role
+ *     description: Fetch users based on their ID or role. If both parameters are missing, all users will be returned.
  *     tags: [Users]
  *     parameters:
  *       - in: query
@@ -85,10 +85,17 @@ userRouter.post('/create', userController.createUser);
  *         required: false
  *         schema:
  *           type: integer
- *         description: ID of the user to retrieve
+ *         description: ID of the user to retrieve (optional).
+ *       - in: query
+ *         name: role
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [author, sectionHead]
+ *         description: Role of the user to retrieve (optional). Can be 'author' or 'sectionHead'.
  *     responses:
  *       200:
- *         description: User retrieved successfully
+ *         description: User(s) retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -98,28 +105,23 @@ userRouter.post('/create', userController.createUser);
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   $ref: '#/components/schemas/User'
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
  *       404:
  *         description: User not found
  *       500:
  *         description: Internal server error
  */
-userRouter.get('/get', userController.getAllUsers);
 
+userRouter.get('/get', userController.getAllUsers);
 /**
  * @swagger
  * /users/update:
  *   put:
- *     summary: Update a user by ID
- *     description: Update a user's details by their ID (ID passed as query parameter).
+ *     summary: Update a user by their token
+ *     description: Update a user's details by extracting user ID from the authentication token.
  *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID of the user to update
  *     requestBody:
  *       required: true
  *       content:
@@ -145,15 +147,12 @@ userRouter.get('/get', userController.getAllUsers);
  *               affiliation:
  *                 type: string
  *                 example: "ABC Corp"
- *               email:
- *                 type: string
- *                 example: "john.doe@example.com"
  *               phone:
  *                 type: string
  *                 example: "+1234567890"
  *               password:
- *                type: string
- *                example: "password123"
+ *                 type: string
+ *                 example: "password123"
  *     responses:
  *       200:
  *         description: User updated successfully
@@ -175,7 +174,9 @@ userRouter.get('/get', userController.getAllUsers);
  *       500:
  *         description: Internal server error
  */
-userRouter.put('/update', userController.updateUser);
+
+userRouter.put('/update', authenticate, userController.updateUser);
+
 
 /**
  * @swagger
@@ -209,7 +210,7 @@ userRouter.put('/update', userController.updateUser);
  * /users/sectionheads/create:
  *   post:
  *     summary: Create a new Section Head
- *     tags: [SectionHeads]
+ *     tags: [SectionHeads And Cheif Editor]
  *     requestBody:
  *       required: true
  *       content:

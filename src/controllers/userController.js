@@ -58,43 +58,83 @@ const userController = {
     },
     getAllUsers: async (req, res) => {
         try {
-            const { id } = req.query;
+            const { id, role } = req.query;
+
             if (id) {
                 const user = await User.findByPk(id);
                 if (!user) {
                     return res.status(404).json({ status: false, message: 'User not found' });
                 }
-                return res.status(200).json({ status: true, data: user });
+                return res.status(200).json({
+                    status: true,
+                    message: "User fetched successfully",
+                    data: user
+                });
             }
+
+            if (role) {
+                const users = await User.findAll({
+                    where: { role }
+                });
+
+                if (users.length === 0) {
+                    return res.status(404).json({ status: false, message: `No users found with role ${role}` });
+                }
+
+                return res.status(200).json({
+                    status: true,
+                    message: `${role} users fetched successfully`,
+                    data: users
+                });
+            }
+
             const users = await User.findAll();
-            return res.status(200).json({ status: true, message: "Users fetched successfully", data: users });
+            return res.status(200).json({
+                status: true,
+                message: "All users fetched successfully",
+                data: users
+            });
         } catch (error) {
-            console.error("Error while fetching user by id", error);
+            console.error("Error while fetching users", error);
             res.status(500).json({ status: false, message: "Internal server error" });
         }
     },
     updateUser: async (req, res) => {
         try {
-            const { id } = req.query;
-            const updateData = req.body;
-            console.log(id, updateData);
-            const user = await User.findByPk(id);
+            const { id } = req.user;
+            const { title, country, firstName, lastName, specialization, affiliation, phone, password } = req.body;
+            console.log(id)
             if (!id) {
-                return res.status(400).json({ status: false, message: "Please provide user id" });
+                return res.status(400).json({ status: false, message: "User ID not found in token" });
             }
+
+            const user = await User.findByPk(id);
+
             if (!user) {
                 return res.status(404).json({ status: false, message: 'User not found' });
             }
-            if (updateData.password) {
+            console.log(req.body)
+            const updateData = {
+                title,
+                country,
+                firstName,
+                lastName,
+                specialization,
+                affiliation,
+                phone,
+            };
+
+            if (password) {
                 const salt = await bcrypt.genSalt(10);
-                updateData.password = await bcrypt.hash(updateData.password, salt);
+                updateData.password = await bcrypt.hash(password, salt);
             }
 
             await user.update(updateData);
+
             return res.status(200).json({ status: true, message: "User updated successfully", data: user });
         } catch (error) {
             console.error("Error while updating user", error);
-            res.status(500).json({ status: false, message: "Internal server error" });
+            return res.status(500).json({ status: false, message: "Internal server error" });
         }
     },
     createSectionheads: async (req, res) => {

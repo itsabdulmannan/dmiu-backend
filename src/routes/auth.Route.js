@@ -15,7 +15,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *   post:
  *     summary: Login an author
  *     description: This endpoint authenticates an author and provides a token.
- *     tags: [Auth]
+ *     tags: [Users]
  *     requestBody:
  *       required: true
  *       content:
@@ -28,7 +28,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *                 example: author@example.com
  *               password:
  *                 type: string
- *                 example: author123
+ *                 example: admin123
  *     responses:
  *       200:
  *         description: Login successful
@@ -56,7 +56,7 @@ authRouter.post('/login-author', authController.loginAuthor);
  *   post:
  *     summary: Login a Chief Editor or Section Head
  *     description: This endpoint authenticates a Chief Editor or Section Head and provides a token.
- *     tags: [Auth]
+ *     tags: [SectionHeads And Cheif Editor]
  *     requestBody:
  *       required: true
  *       content:
@@ -66,10 +66,10 @@ authRouter.post('/login-author', authController.loginAuthor);
  *             properties:
  *               email:
  *                 type: string
- *                 example: chiefeditor@example.com
+ *                 example: admin@dmiu.com
  *               password:
  *                 type: string
- *                 example: chiefeditor123
+ *                 example: admin123
  *     responses:
  *       200:
  *         description: Login successful

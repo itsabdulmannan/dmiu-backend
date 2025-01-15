@@ -79,20 +79,6 @@ userRouter.post('/create', userController.createUser);
  *     summary: Get users by ID or role
  *     description: Fetch users based on their ID or role. If both parameters are missing, all users will be returned.
  *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: id
- *         required: false
- *         schema:
- *           type: integer
- *         description: ID of the user to retrieve (optional).
- *       - in: query
- *         name: role
- *         required: false
- *         schema:
- *           type: string
- *           enum: [author, sectionHead]
- *         description: Role of the user to retrieve (optional). Can be 'author' or 'sectionHead'.
  *     responses:
  *       200:
  *         description: User(s) retrieved successfully
@@ -114,7 +100,7 @@ userRouter.post('/create', userController.createUser);
  *         description: Internal server error
  */
 
-userRouter.get('/get', userController.getAllUsers);
+userRouter.get('/get', authenticate, userController.getAllUsers);
 /**
  * @swagger
  * /users/update:

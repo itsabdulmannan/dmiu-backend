@@ -1,6 +1,8 @@
 const User = require('../models/user.Model');
 const { mailer, transporter } = require('../config/mailer');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const { use } = require('../routes/user.Route');
+const { Op } = require('sequelize');
 
 const generateOTP = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
@@ -58,42 +60,24 @@ const userController = {
     },
     getAllUsers: async (req, res) => {
         try {
-            const { id, role } = req.query;
+            const user = req.user;
+            const receivedId = user.id;
 
-            if (id) {
-                const user = await User.findByPk(id);
-                if (!user) {
+            if (receivedId) {
+                const receivedUser = await User.findByPk(receivedId);
+
+                if (!receivedUser) {
                     return res.status(404).json({ status: false, message: 'User not found' });
                 }
-                return res.status(200).json({
-                    status: true,
-                    message: "User fetched successfully",
-                    data: user
-                });
-            }
 
-            if (role) {
-                const users = await User.findAll({
-                    where: { role }
-                });
-
-                if (users.length === 0) {
-                    return res.status(404).json({ status: false, message: `No users found with role ${role}` });
+                if (receivedUser.role === 'author') {
+                    return res.status(200).json({
+                        status: true,
+                        message: `User with ID ${receivedId} fetched successfully`,
+                        data: receivedUser,
+                    });
                 }
-
-                return res.status(200).json({
-                    status: true,
-                    message: `${role} users fetched successfully`,
-                    data: users
-                });
             }
-
-            const users = await User.findAll();
-            return res.status(200).json({
-                status: true,
-                message: "All users fetched successfully",
-                data: users
-            });
         } catch (error) {
             console.error("Error while fetching users", error);
             res.status(500).json({ status: false, message: "Internal server error" });

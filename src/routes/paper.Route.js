@@ -198,6 +198,106 @@ paperRouter.post('/create', upload.fields([
 
 /**
  * @swagger
+ * /papers/fetch-papers/status:
+ *   get:
+ *     summary: Retrieve papers based on their status and optionally by paper ID
+ *     description: Fetches papers with the status of 'published', 'rejected', 'submitted', or 'underReview' based on the input parameter ('accepted', 'rejected', 'assigned', 'submitted'). If the status is 'underReview' and a paper ID is provided, it will also retrieve the details of the section heads assigned to the paper.
+ *     tags:
+ *       - Papers
+ *     parameters:
+ *       - in: query
+ *         name: param
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - accepted
+ *             - rejected
+ *             - assigned
+ *             - submitted
+ *         required: false
+ *         description: Determines the paper status to filter by.
+ *       - in: query
+ *         name: paperId
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: The ID of a specific paper to retrieve. If provided, only this paper will be returned with its assigned section heads (if applicable).
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the list of papers.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 papers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: The unique ID of the paper.
+ *                       title:
+ *                         type: string
+ *                         description: The title of the paper.
+ *                       paperStatus:
+ *                         type: string
+ *                         description: The current status of the paper.
+ *                         example: underReview
+ *                       assignedTo:
+ *                         type: array
+ *                         description: Details of section heads assigned to the paper (only if status is 'underReview' and applicable).
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               description: The ID of the section head.
+ *                             firstName:
+ *                               type: string
+ *                               description: The first name of the section head.
+ *                             lastName:
+ *                               type: string
+ *                               description: The last name of the section head.
+ *       400:
+ *         description: Missing or invalid query parameter.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameter value.
+ *       404:
+ *         description: No papers found for the provided status or ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No papers found with status: underReview"
+ *       500:
+ *         description: Server error while processing the request.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ *                 error:
+ *                   type: string
+ *                   example: Error details here
+ */
+paperRouter.get('/fetch-papers/status', paperController.getStatusBasePapers);
+
+/**
+ * @swagger
  * /papers/get:
  *   get:
  *     summary: Get all papers, papers by ID, or filtered papers by archive or inPress
@@ -541,5 +641,100 @@ paperRouter.put('/update/:id', paperController.updatePaper);
  *         description: Internal server error
  */
 paperRouter.delete('/delete/:id', paperController.deletePaper);
+
+/**
+ * @swagger
+ * /papers/update-status:
+ *   patch:
+ *     summary: Update the status of a paper for a section head
+ *     tags:
+ *       - Papers
+ *     description: Allows a section head to update the status of a paper (e.g., accepted or rejected). Only section heads are authorized to perform this action.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - paperID
+ *               - status
+ *             properties:
+ *               paperID:
+ *                 type: integer
+ *                 description: ID of the paper to update.
+ *                 example: 123
+ *               status:
+ *                 type: string
+ *                 description: The new status to assign to the paper (accepted or rejected).
+ *                 enum: [accepted, rejected]
+ *                 example: accepted
+ *               comment:
+ *                 type: string
+ *                 description: An optional comment to provide additional context for the status update.
+ *                 example: "The paper has been accepted for its originality and impact."
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The date when the status update is applied. Defaults to the current date if not provided.
+ *                 example: "2025-01-15T10:30:00Z"
+ *     responses:
+ *       200:
+ *         description: Paper status updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Paper status updated to 'accepted' successfully."
+ *       400:
+ *         description: Invalid input or action.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid status. Valid statuses are: accepted, rejected."
+ *       403:
+ *         description: Unauthorized action (not a section head).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Only a section head can update the paper status."
+ *       404:
+ *         description: Paper not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Paper not found."
+ *       500:
+ *         description: Server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Server error"
+ *                 error:
+ *                   type: string
+ *                   example: "An unexpected error occurred."
+ *     security:
+ *       - bearerAuth: []
+ */
+paperRouter.patch('/update-status:', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
 
 module.exports = paperRouter;

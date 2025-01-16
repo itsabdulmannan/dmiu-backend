@@ -160,7 +160,7 @@ const userController = {
                 lastName,
                 email,
                 phone,
-                role: 'sectionhead',
+                role: 'sectionHead',
                 password: hashedPassword
             });
 

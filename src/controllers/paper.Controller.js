@@ -91,13 +91,14 @@ const paperController = {
     getAllPapers: async (req, res) => {
         try {
             const { id, archive, inPress } = req.query;
+            console.log(req.query);
 
             if (id) {
-                const papers = await papers.findByPk(id);
-                if (!papers) {
+                const paper = await papers.findByPk(id);
+                if (!paper) {
                     return res.status(404).json({ message: 'Paper not found' });
                 }
-                return res.status(200).json(papers);
+                return res.status(200).json(paper);
             }
 
             let condition = { paperStatus: 'published' };
@@ -109,8 +110,7 @@ const paperController = {
 
             if (archive === 'true') {
                 condition.created_at = { [Op.lt]: thirtyDaysAgo };
-            }
-            else if (inPress === 'true') {
+            } else if (inPress === 'true') {
                 condition.created_at = { [Op.gt]: oneMonthAgoStart };
             }
 
@@ -120,7 +120,7 @@ const paperController = {
                 return res.status(404).json({ message: 'No papers found matching the criteria.' });
             }
 
-            return res.status(200).json(papersList);
+            return res.status(200).json({ status: true, message: "Papers fetched successfully.", data: papersList });
 
         } catch (error) {
             console.error("Error occurred while fetching papers:", error);
@@ -201,11 +201,11 @@ const paperController = {
     },
     updatePaperStatusForSectionHead: async (req, res) => {
         try {
-            const { paperID, status, comment, date } = req.body;
+            const { paperId, status, comment, date } = req.body;
             const user = req.user;
-            const sectionHeadId = user.id; 
+            const sectionHeadId = user.id;
 
-            const paperRecord = await papers.findByPk(paperID);
+            const paperRecord = await papers.findByPk(paperId);
             if (!paperRecord) {
                 return res.status(404).json({ message: 'Paper not found' });
             }
@@ -219,23 +219,20 @@ const paperController = {
                 return res.status(400).json({ message: 'Paper must be under review before assigning a section head' });
             }
 
-            if (status === 'assigned') {
-                await reviewers.create({
-                    userId: sectionHeadId,
-                    paperId: paperID,
-                    status: 'assigned',
-                    statusHistory: [
-                        { status: 'assigned', comment, date: date || new Date() }
-                    ]
-                });
+            const reviewerRecord = await reviewer.findOne({ where: { paperId: paperId, sectionHeadId } });
 
-                paperRecord.paperStatus = 'assigned';
-                await paperRecord.save();
+            reviewerRecord.status = status;
+            const statusHistory = reviewerRecord.statusHistory || [];
+            statusHistory.push({
+                status,
+                comment,
+                date: date || new Date(),
+            });
+            reviewerRecord.statusHistory = statusHistory;
 
-                return res.status(200).json({ message: 'Paper status updated and section head assigned successfully' });
-            } else {
-                return res.status(400).json({ message: 'Invalid status' });
-            }
+            await reviewerRecord.save();
+
+            return res.status(200).json({ message: 'Paper status updated successfully' });
         } catch (error) {
             console.error("Error while updating paper status for section head", error);
             return res.status(500).json({ message: 'Server error', error: error.message });
@@ -270,6 +267,95 @@ const paperController = {
 
         } catch (error) {
             console.error(error);
+            return res.status(500).json({ message: 'Server error', error: error.message });
+        }
+    },
+    getStatusBasePapers: async (req, res) => {
+        try {
+            const { param, paperId } = req.query;
+
+            // if (!param && !paperId) {
+            //     return res.status(400).json({ message: 'Missing parameter in request body.' });
+            // }
+
+            let paperStatus;
+            if (param) {
+                switch (param) {
+                    case 'accepted':
+                        paperStatus = 'published';
+                        break;
+                    case 'submitted':
+                        paperStatus = 'submitted';
+                        break;
+                    case 'rejected':
+                        paperStatus = 'rejected';
+                        break;
+                    case 'assigned':
+                        paperStatus = 'underReview';
+                        break;
+                    default:
+                        return res.status(400).json({ message: `Invalid parameter value: ${param}` });
+                }
+            }
+
+            const whereClause = {};
+            if (paperStatus) whereClause.paperStatus = paperStatus;
+            if (paperId) whereClause.id = paperId;
+
+            const papersList = await papers.findAll({
+                where: whereClause,
+            });
+
+            if (papersList.length === 0) {
+                return res.status(404).json({ message: `No papers found with the specified criteria.` });
+            }
+
+            if (param === 'assigned' || (!param && paperId)) {
+                const paperIds = papersList.map((paper) => paper.id);
+
+                const reviewersData = await reviewer.findAll({
+                    where: {
+                        paperId: paperIds,
+                    },
+                    attributes: ['paperId', 'sectionHeadId'],
+                });
+
+                const sectionHeadIds = [...new Set(reviewersData.map((review) => review.sectionHeadId))];
+
+                const sectionHeads = await User.findAll({
+                    where: {
+                        id: sectionHeadIds,
+                    },
+                    attributes: ['id', 'firstName', 'lastName'],
+                });
+
+                const papersWithReviewers = papersList.map((paper) => {
+                    const assignedReviewers = reviewersData
+                        .filter((review) => review.paperId === paper.id)
+                        .map((review) => {
+                            const sectionHead = sectionHeads.find((sh) => sh.id === review.sectionHeadId);
+                            return sectionHead
+                                ? {
+                                    id: sectionHead.id,
+                                    firstName: sectionHead.firstName,
+                                    lastName: sectionHead.lastName,
+                                }
+                                : null;
+                        })
+                        .filter(Boolean);
+
+                    return {
+                        ...paper.dataValues,
+                        assignedTo: assignedReviewers,
+                    };
+                });
+
+                return res.status(200).json({ papers: papersWithReviewers });
+            }
+
+            return res.status(200).json({ papers: papersList });
+        } catch (error) {
+            console.error('Error while fetching papers based on status', error);
             return res.status(500).json({ message: 'Server error', error: error.message });
         }
     }

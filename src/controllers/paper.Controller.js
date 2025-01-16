@@ -29,6 +29,8 @@ const paperController = {
                 reviewers: reviewersRaw,
                 authorsConflict,
                 dataAvailability,
+                apcs,
+                studiedAndUnderstood
             } = req.body;
 
             const authors = JSON.parse(authorsRaw);
@@ -79,6 +81,8 @@ const paperController = {
                 mainManuscript,
                 coverLetter,
                 supplementaryFile,
+                apcs,
+                studiedAndUnderstood
             });
 
             return res.status(201).json({ message: 'Paper added successfully!', paper: newPaper });

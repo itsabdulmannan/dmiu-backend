@@ -173,6 +173,14 @@ const paperRouter = express.Router();
  *               supplementaryFile:
  *                 type: string
  *                 format: binary
+ *               apcs:
+ *                 type: boolean
+ *                 description: Indicates whether APCs have been agreed upon.
+ *                 default: false
+ *               studiedAndUnderstood:
+ *                 type: boolean
+ *                 description: Confirms that all instructions have been studied and understood.
+ *                 default: false
  *     responses:
  *       201:
  *         description: Paper added successfully with files
@@ -190,6 +198,7 @@ const paperRouter = express.Router();
  *       500:
  *         description: Internal server error
  */
+
 paperRouter.post('/create', upload.fields([
     { name: 'mainManuscript', maxCount: 1 },
     { name: 'coverLetter', maxCount: 1 },

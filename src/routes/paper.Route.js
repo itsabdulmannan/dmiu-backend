@@ -654,6 +654,6 @@ paperRouter.patch('/update-status:', authenticate, authorize('sectionHead'), pap
  *       500:
  *         description: Internal server error
  */
-paperRouter.get('/assigned-papers', paperController.getAssignedPaerOfSectionHead);
+paperRouter.get('/assigned-papers', paperController.getAssignedPapersOfSectionHead);
 
 module.exports = paperRouter;

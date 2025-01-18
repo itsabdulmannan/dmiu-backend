@@ -249,4 +249,96 @@ userRouter.put('/update', authenticate, userController.updateUser);
 
 userRouter.post('/sectionheads/create', authenticate, authorize('cheifEditor'), userController.createSectionheads);
 
+/**
+ * @swagger
+ * /users/section-heads:
+ *   get:
+ *     summary: Get section heads based on role
+ *     description: Fetches a list of users with the role of "sectionHead".
+ *     tags:
+ *       - SectionHeads
+ *     parameters:
+ *       - in: query
+ *         name: userRole
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: sectionHead
+ *         description: The role to filter users (must be "sectionHead").
+ *     responses:
+ *       200:
+ *         description: Successfully fetched section heads.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Section heads fetched successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         example: John Doe
+ *                       email:
+ *                         type: string
+ *                         example: johndoe@example.com
+ *                       role:
+ *                         type: string
+ *                         example: sectionHead
+ *       400:
+ *         description: Invalid or missing query parameter.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid or missing userRole query parameter
+ *       404:
+ *         description: No section heads found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: No section heads found
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: An error occurred while fetching section heads
+ *                 error:
+ *                   type: string
+ *                   example: Error message
+ */
+userRouter.get('/section-heads',userController.getSectionHead);
+
 module.exports = userRouter;

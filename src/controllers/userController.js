@@ -187,7 +187,34 @@ const userController = {
             console.error("Error while creating section head", error);
             res.status(500).json({ status: false, message: "Internal server error", error })
         }
-    }
+    },
+    getSectionHead: async (req, res) => {
+        try {
+            const { userRole } = req.query;
+
+            if (!userRole || userRole !== 'sectionHead') {
+                return res.status(400).json({ status: false, message: "Invalid or missing userRole query parameter" });
+            }
+
+            const sectionHeads = await User.findAll({ where: { role: userRole } });
+
+            if (sectionHeads.length === 0) {
+                return res.status(404).json({ status: false, message: "No section heads found" });
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: "Section heads fetched successfully",
+                data: sectionHeads
+            });
+        } catch (error) {
+            return res.status(500).json({
+                status: false,
+                message: "An error occurred while fetching section heads",
+                error: error.message
+            });
+        }
+    },
 }
 
 module.exports = userController;

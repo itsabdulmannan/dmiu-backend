@@ -344,39 +344,42 @@ const paperController = {
                 attributes: ['paperId'],
             });
 
-            if (papersIds.length === 0) {
-                return res.status(404).json({ message: "No papers found for this section head" });
-            }
-
-            const paperIds = papersIds.map(paper => paper.paperId);
-            console.log(paperIds);
-
-            const paperDetails = await papers.findAll({
-                where: {
-                    id: {
-                        [Op.in]: paperIds  
-                    }
-                }
-            });
-
             const sectionHeadDetails = await User.findByPk(sectionHeadId);
 
             if (!sectionHeadDetails) {
                 return res.status(404).json({ message: "Section head not found" });
             }
 
+            if (papersIds.length === 0) {
+                return res.status(200).json({
+                    data: [], 
+                    sectionHead: sectionHeadDetails,
+                    totalAssignedPapers: 0 
+                });
+            }
+
+            const paperIds = papersIds.map(paper => paper.paperId);
+            const paperDetails = await papers.findAll({
+                where: {
+                    id: {
+                        [Op.in]: paperIds 
+                    }
+                }
+            });
+
             const totalAssignedPapers = papersIds.length;
 
             res.status(200).json({
                 data: paperDetails,
                 sectionHead: sectionHeadDetails,
-                totalAssignedPapers: totalAssignedPapers 
+                totalAssignedPapers: totalAssignedPapers
             });
 
         } catch (error) {
             console.error("Error while getting assigned papers and section head details", error);
             res.status(500).json({ message: "Internal server error" });
         }
+
     }
 };
 

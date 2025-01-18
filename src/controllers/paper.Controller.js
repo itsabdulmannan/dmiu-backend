@@ -359,9 +359,22 @@ const paperController = {
                 }
             });
 
-            res.status(200).json({ papers: paperDetails });
+            const sectionHeadDetails = await User.findByPk(sectionHeadId);
+
+            if (!sectionHeadDetails) {
+                return res.status(404).json({ message: "Section head not found" });
+            }
+
+            const totalAssignedPapers = papersIds.length;
+
+            res.status(200).json({
+                data: paperDetails,
+                sectionHead: sectionHeadDetails,
+                totalAssignedPapers: totalAssignedPapers 
+            });
+
         } catch (error) {
-            console.error(error);
+            console.error("Error while getting assigned papers and section head details", error);
             res.status(500).json({ message: "Internal server error" });
         }
     }

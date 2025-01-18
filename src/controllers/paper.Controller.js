@@ -242,38 +242,6 @@ const paperController = {
             return res.status(500).json({ message: 'Server error', error: error.message });
         }
     },
-    updatePaper: async (req, res) => {
-        const { id } = req.params;
-        try {
-            const paper = await papers.findByPk(id);
-            if (!paper) {
-                return res.status(404).json({ message: 'Paper not found' });
-            }
-
-            const updatedPaper = await papers.update(req.body);
-            return res.status(200).json({ message: 'Paper updated successfully', paper: updatedPaper });
-
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ message: 'Server error', error: error.message });
-        }
-    },
-    deletePaper: async (req, res) => {
-        const { id } = req.params;
-        try {
-            const paper = await papers.findByPk(id);
-            if (!paper) {
-                return res.status(404).json({ message: 'Paper not found' });
-            }
-
-            await papers.destroy();
-            return res.status(200).json({ message: 'Paper deleted successfully' });
-
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ message: 'Server error', error: error.message });
-        }
-    },
     getStatusBasePapers: async (req, res) => {
         try {
             const { param, paperId } = req.query;
@@ -361,6 +329,40 @@ const paperController = {
         } catch (error) {
             console.error('Error while fetching papers based on status', error);
             return res.status(500).json({ message: 'Server error', error: error.message });
+        }
+    },
+    getAssignedPaerOfSectionHead: async (req, res) => {
+        try {
+            const { sectionHeadId } = req.query;
+
+            if (!sectionHeadId) {
+                return res.status(400).json({ message: "sectionHeadId is required" });
+            }
+
+            const papersIds = await reviewer.findAll({
+                where: { sectionHeadId },
+                attributes: ['paperId'],
+            });
+
+            if (papersIds.length === 0) {
+                return res.status(404).json({ message: "No papers found for this section head" });
+            }
+
+            const paperIds = papersIds.map(paper => paper.paperId);
+            console.log(paperIds);
+
+            const paperDetails = await papers.findAll({
+                where: {
+                    id: {
+                        [Op.in]: paperIds  
+                    }
+                }
+            });
+
+            res.status(200).json({ papers: paperDetails });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Internal server error" });
         }
     }
 };

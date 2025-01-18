@@ -527,137 +527,11 @@ paperRouter.put('/updateStatusForSectionHead', authenticate, authorize('sectionH
 
 /**
  * @swagger
- * /papers/update/{id}:
- *   put:
- *     summary: Update a paper by ID
- *     tags: [Papers]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Paper ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               manuScriptTitle:
- *                 type: string
- *               manuScriptType:
- *                 type: string
- *               runningTitle:
- *                 type: string
- *               subject:
- *                 type: string
- *               abstract:
- *                 type: string
- *               correspondingAuthorName:
- *                 type: string
- *               correspondingAuthorEmail:
- *                 type: string
- *               noOfAuthors:
- *                 type: integer
- *               authors:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *               reviewers:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *               authorsConflict:
- *                 type: string
- *               dataAvailability:
- *                 type: string
- *               mainManuscript:
- *                 type: string
- *               coverLetter:
- *                 type: string
- *               supplementaryFile:
- *                 type: string
- *               paperStatus:
- *                 type: string
- *                 enum:
- *                   - submitted
- *                   - under review
- *                   - accepted
- *                   - rejected
- *                   - pending
- *               statusHistory:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     status:
- *                       type: string
- *                     date:
- *                       type: string
- *                       format: date-time
- *     responses:
- *       200:
- *         description: Paper updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 paper:
- *                   $ref: '#/components/schemas/Paper'
- *       400:
- *         description: Invalid input data
- *       404:
- *         description: Paper not found
- *       500:
- *         description: Internal server error
- */
-paperRouter.put('/update/:id', paperController.updatePaper);
-
-/**
- * @swagger
- * /papers/delete/{id}:
- *   delete:
- *     summary: Delete a paper by ID
- *     tags: [Papers]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Paper ID
- *     responses:
- *       200:
- *         description: Paper deleted successfully
- *       404:
- *         description: Paper not found
- *       500:
- *         description: Internal server error
- */
-paperRouter.delete('/delete/:id', paperController.deletePaper);
-
-/**
- * @swagger
  * /papers/update-status:
  *   patch:
  *     summary: Update the status of a paper for a section head
  *     tags:
- *       - Papers
+ *       - SectionHeads And Cheif Editor
  *     description: Allows a section head to update the status of a paper (e.g., accepted or rejected). Only section heads are authorized to perform this action.
  *     requestBody:
  *       required: true
@@ -745,5 +619,41 @@ paperRouter.delete('/delete/:id', paperController.deletePaper);
  *       - bearerAuth: []
  */
 paperRouter.patch('/update-status:', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
+
+/**
+ * @swagger
+ * /papers/assigned-papers:
+ *   get:
+ *     summary: Get all papers assigned to a specific section head
+ *     description: Retrieve all the paper IDs assigned to a particular section head by `sectionHeadId`.
+ *     parameters:
+ *       - in: query
+ *         name: sectionHeadId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique ID of the section head.
+ *     responses:
+ *       200:
+ *         description: A list of papers assigned to the section head
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 papers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       paperId:
+ *                         type: string
+ *                         description: The ID of the paper assigned to the section head
+ *       400:
+ *         description: Bad request, sectionHeadId is missing or invalid
+ *       500:
+ *         description: Internal server error
+ */
+paperRouter.get('/assigned-papers', paperController.getAssignedPaerOfSectionHead);
 
 module.exports = paperRouter;

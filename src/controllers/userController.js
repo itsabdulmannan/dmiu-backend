@@ -196,13 +196,7 @@ const userController = {
     },
     getSectionHead: async (req, res) => {
         try {
-            const { userRole } = req.query;
-
-            if (!userRole || userRole !== 'sectionHead') {
-                return res.status(400).json({ status: false, message: "Invalid or missing userRole query parameter" });
-            }
-
-            const sectionHeads = await User.findAll({ where: { role: userRole } });
+            const sectionHeads = await User.findAll({ where: { role: 'sectionHead' } });
 
             if (sectionHeads.length === 0) {
                 return res.status(404).json({ status: false, message: "No section heads found" });

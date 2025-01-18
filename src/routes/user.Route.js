@@ -269,14 +269,6 @@ userRouter.post('/sectionheads/create', authenticate, authorize('cheifEditor'), 
  *     description: Fetches a list of users with the role of "sectionHead".
  *     tags:
  *       - SectionHeads
- *     parameters:
- *       - in: query
- *         name: userRole
- *         required: true
- *         schema:
- *           type: string
- *           example: sectionHead
- *         description: The role to filter users (must be "sectionHead").
  *     responses:
  *       200:
  *         description: Successfully fetched section heads.
@@ -351,6 +343,6 @@ userRouter.post('/sectionheads/create', authenticate, authorize('cheifEditor'), 
  *                   type: string
  *                   example: Error message
  */
-userRouter.get('/section-heads', userController.getSectionHead);
+userRouter.get('/section-heads', authenticate, authorize('cheifEditor'), userController.getSectionHead);
 
 module.exports = userRouter;

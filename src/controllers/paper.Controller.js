@@ -335,22 +335,22 @@ const paperController = {
         try {
             const { sectionHeadId } = req.query;
             console.log(sectionHeadId, "Called");
-    
+
             if (!sectionHeadId) {
                 return res.status(400).json({ message: "sectionHeadId is required" });
             }
-    
+
             const papersIds = await reviewer.findAll({
                 where: { sectionHeadId },
                 attributes: ['paperId'],
             });
-    
+
             const sectionHeadDetails = await User.findByPk(sectionHeadId);
-    
+
             if (!sectionHeadDetails) {
                 return res.status(404).json({ message: "Section head not found" });
             }
-    
+
             if (papersIds.length === 0) {
                 return res.status(200).json({
                     data: [{
@@ -362,9 +362,9 @@ const paperController = {
                     }]
                 });
             }
-    
+
             const paperIds = papersIds.map(paper => paper.paperId);
-    
+
             const paperDetails = await papers.findAll({
                 where: {
                     id: {
@@ -372,7 +372,7 @@ const paperController = {
                     }
                 }
             });
-    
+
             const formattedPaperDetails = paperDetails.map(paper => {
                 return {
                     mainManuscript: paper.mainManuscript,
@@ -400,25 +400,25 @@ const paperController = {
                     updated_at: paper.updatedAt
                 };
             });
-    
+
             const totalAssignedPapers = papersIds.length;
-    
+
             return res.status(200).json({
-                data: [{
+                data: {
                     sectionHead: {
                         ...sectionHeadDetails.toJSON(),
                         totalAssignedPapers: totalAssignedPapers
                     },
                     assignedPapers: formattedPaperDetails
-                }]
+                }
             });
-    
+
         } catch (error) {
             console.error("Error while getting assigned papers and section head details", error);
             return res.status(500).json({ message: "Internal server error" });
         }
     }
-    
+
 };
 
 module.exports = paperController;

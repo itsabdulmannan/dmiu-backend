@@ -172,20 +172,32 @@ userRouter.put('/update', authenticate, userController.updateUser);
  *       type: object
  *       required:
  *         - title
+ *         - country
  *         - firstName
  *         - lastName
+ *         - specialization
+ *         - affiliation
  *         - email
  *         - phone
  *       properties:
  *         title:
  *           type: string
  *           description: The title of the section head (e.g., Mr., Dr.)
+ *         country:
+ *           type: string
+ *           description: The country of the section head.
  *         firstName:
  *           type: string
  *           description: The first name of the section head.
  *         lastName:
  *           type: string
  *           description: The last name of the section head.
+ *         specialization:
+ *           type: string
+ *           description: The specialization of the section head (e.g., "Physics", "Mathematics").
+ *         affiliation:
+ *           type: string
+ *           description: The affiliation (e.g., the organization or university) of the section head.
  *         email:
  *           type: string
  *           description: The email address of the section head.
@@ -339,6 +351,6 @@ userRouter.post('/sectionheads/create', authenticate, authorize('cheifEditor'), 
  *                   type: string
  *                   example: Error message
  */
-userRouter.get('/section-heads',userController.getSectionHead);
+userRouter.get('/section-heads', userController.getSectionHead);
 
 module.exports = userRouter;

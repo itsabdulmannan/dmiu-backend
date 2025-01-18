@@ -125,8 +125,11 @@ const userController = {
         try {
             const {
                 title,
+                country,
                 firstName,
                 lastName,
+                specialization,
+                affiliation,
                 email,
                 phone
             } = req.body;
@@ -156,8 +159,11 @@ const userController = {
 
             const user = await User.create({
                 title,
+                country,
                 firstName,
                 lastName,
+                specialization,
+                affiliation,
                 email,
                 phone,
                 role: 'sectionHead',

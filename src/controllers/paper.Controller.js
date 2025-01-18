@@ -404,13 +404,13 @@ const paperController = {
             const totalAssignedPapers = papersIds.length;
 
             return res.status(200).json({
-                data: {
+            
                     sectionHead: {
                         ...sectionHeadDetails.toJSON(),
                         totalAssignedPapers: totalAssignedPapers
                     },
                     assignedPapers: formattedPaperDetails
-                }
+                
             });
 
         } catch (error) {

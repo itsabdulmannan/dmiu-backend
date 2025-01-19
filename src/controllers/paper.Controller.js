@@ -133,7 +133,8 @@ const paperController = {
     },
     updatePaperStatusForCheifEditor: async (req, res) => {
         try {
-            const { paperID, status, comment, date, sectionHeadIds } = req.body;
+            const { paperID } = req.params;
+            const { status, comment, date, sectionHeadIds } = req.body;
             const user = req.user;
             const userId = user.id;
             const paperRecord = await papers.findByPk(paperID);
@@ -404,11 +405,11 @@ const paperController = {
             const totalAssignedPapers = papersIds.length;
 
             return res.status(200).json({
-                    sectionHead: {
-                        ...sectionHeadDetails.toJSON(),
-                        totalAssignedPapers: totalAssignedPapers
-                    },
-                    assignedPapers: formattedPaperDetails 
+                sectionHead: {
+                    ...sectionHeadDetails.toJSON(),
+                    totalAssignedPapers: totalAssignedPapers
+                },
+                assignedPapers: formattedPaperDetails
             });
 
         } catch (error) {

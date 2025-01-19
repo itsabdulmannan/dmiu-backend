@@ -346,11 +346,19 @@ paperRouter.get('/get', paperController.getAllPapers);
 
 /**
  * @swagger
- * /papers/updateStatus:
+ * /papers/updateStatus/{paperID}:
  *   put:
  *     summary: Update the status of a paper For The Chief Editor
  *     description: Allows a chief editor to update the status of a paper, including adding comments and a date to the status history.
  *     tags: [SectionHeads And Cheif Editor]
+ *     parameters:
+ *       - in: path
+ *         name: paperID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the paper to update
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
@@ -358,13 +366,8 @@ paperRouter.get('/get', paperController.getAllPapers);
  *           schema:
  *             type: object
  *             required:
- *               - paperID
  *               - status
  *             properties:
- *               paperID:
- *                 type: integer
- *                 description: ID of the paper to update
- *                 example: 1
  *               status:
  *                 type: string
  *                 description: New status of the paper
@@ -430,7 +433,7 @@ paperRouter.get('/get', paperController.getAllPapers);
  *                   example: Detailed error message
  */
 
-paperRouter.put('/updateStatus', authenticate, authorize('cheifEditor'), paperController.updatePaperStatusForCheifEditor);
+paperRouter.put('/updateStatus/:paperID', authenticate, authorize('cheifEditor'), paperController.updatePaperStatusForCheifEditor);
 
 /**
  * @swagger

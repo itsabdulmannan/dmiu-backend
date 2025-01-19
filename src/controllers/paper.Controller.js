@@ -197,7 +197,7 @@ const paperController = {
 
             await paperRecord.save();
 
-            return res.status(200).json({ message: 'Paper status updated successfully' });
+            return res.status(200).json({ status: true, message: 'Paper status updated successfully' });
 
         } catch (error) {
             console.error("Error while updating paper status", error);

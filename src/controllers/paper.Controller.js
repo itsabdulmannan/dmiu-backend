@@ -206,11 +206,12 @@ const paperController = {
     },
     updatePaperStatusForSectionHead: async (req, res) => {
         try {
-            const { paperId, status, comment, date } = req.body;
+            const { paperID } = req.params;
+            const { status, comment, date } = req.body;
+            console.log(paperID, status, comment, date);
             const user = req.user;
             const sectionHeadId = user.id;
-
-            const paperRecord = await papers.findByPk(paperId);
+            const paperRecord = await papers.findByPk(paperID);
             if (!paperRecord) {
                 return res.status(404).json({ message: 'Paper not found' });
             }
@@ -224,7 +225,7 @@ const paperController = {
                 return res.status(400).json({ message: 'Paper must be under review before assigning a section head' });
             }
 
-            const reviewerRecord = await reviewer.findOne({ where: { paperId: paperId, sectionHeadId } });
+            const reviewerRecord = await reviewer.findOne({ where: { paperId: paperID, sectionHeadId } });
 
             reviewerRecord.status = status;
             const statusHistory = reviewerRecord.statusHistory || [];

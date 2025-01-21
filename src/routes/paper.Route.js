@@ -437,7 +437,7 @@ paperRouter.put('/updateStatus/:paperID', authenticate, authorize('cheifEditor')
 
 /**
  * @swagger
- * /papers/SectionHead/updateStatus/{paperID}:
+ * /papers/sectionHead/updateStatus/{paperID}:
  *   put:
  *     summary: Update the status of a paper by a Section Head and assign to section heads
  *     description: Allows a section head to update the status of a paper (e.g., assign it to themselves or others for review).
@@ -529,7 +529,7 @@ paperRouter.put('/updateStatus/:paperID', authenticate, authorize('cheifEditor')
  *                   example: Detailed error message
  */
 
-paperRouter.put('/SectionHead/updateStatus/:paperID', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
+paperRouter.put('/sectionHead/updateStatus/:paperID', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
 
 /**
  * @swagger

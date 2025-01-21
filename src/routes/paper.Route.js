@@ -628,7 +628,7 @@ paperRouter.patch('/update-status:', authenticate, authorize('sectionHead'), pap
  * /papers/assigned-papers:
  *   get:
  *     summary: Get all papers assigned to a specific section head
- *     description: Retrieve all the paper IDs assigned to a particular section head by `sectionHeadId`.
+ *     description: Retrieve all the paper IDs assigned to a particular section head by `sectionHeadId`. Optionally, filter the assigned papers by their `status`.
  *     parameters:
  *       - in: query
  *         name: sectionHeadId
@@ -636,6 +636,13 @@ paperRouter.patch('/update-status:', authenticate, authorize('sectionHead'), pap
  *         schema:
  *           type: string
  *         description: The unique ID of the section head.
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [assigned, accepted, rejected]
+ *         description: Filter the assigned papers based on their status. Valid values are `assigned`, `accepted`, and `rejected`.
  *     responses:
  *       200:
  *         description: A list of papers assigned to the section head
@@ -644,19 +651,61 @@ paperRouter.patch('/update-status:', authenticate, authorize('sectionHead'), pap
  *             schema:
  *               type: object
  *               properties:
- *                 papers:
+ *                 sectionHead:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       description: The ID of the section head.
+ *                     firstName:
+ *                       type: string
+ *                       description: The first name of the section head.
+ *                     lastName:
+ *                       type: string
+ *                       description: The last name of the section head.
+ *                     email:
+ *                       type: string
+ *                       description: The email of the section head.
+ *                     totalAssignedPapers:
+ *                       type: integer
+ *                       description: The total number of papers assigned to the section head.
+ *                 assignedPapers:
  *                   type: array
  *                   items:
  *                     type: object
  *                     properties:
- *                       paperId:
+ *                       id:
+ *                         type: integer
+ *                         description: The unique ID of the paper.
+ *                       manuScriptTitle:
  *                         type: string
- *                         description: The ID of the paper assigned to the section head
+ *                         description: The title of the manuscript.
+ *                       manuScriptType:
+ *                         type: string
+ *                         description: The type of the manuscript.
+ *                       paperStatus:
+ *                         type: string
+ *                         description: The current status of the paper.
+ *                       correspondingAuthorName:
+ *                         type: string
+ *                         description: The name of the corresponding author.
+ *                       correspondingAuthorEmail:
+ *                         type: string
+ *                         description: The email of the corresponding author.
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                         description: The date and time when the paper was created.
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                         description: The date and time when the paper was last updated.
  *       400:
  *         description: Bad request, sectionHeadId is missing or invalid
  *       500:
  *         description: Internal server error
  */
+
 paperRouter.get('/assigned-papers', paperController.getAssignedPapersOfSectionHead);
 
 module.exports = paperRouter;

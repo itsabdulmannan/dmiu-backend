@@ -334,15 +334,24 @@ const paperController = {
     },
     getAssignedPapersOfSectionHead: async (req, res) => {
         try {
-            const { sectionHeadId } = req.query;
-            console.log(sectionHeadId, "Called");
+            const { sectionHeadId, status } = req.query;
 
             if (!sectionHeadId) {
                 return res.status(400).json({ message: "sectionHeadId is required" });
             }
 
+            const validStatuses = ['assigned', 'accepted', 'rejected'];
+            if (status && !validStatuses.includes(status)) {
+                return res.status(400).json({ message: `Invalid status. Valid statuses are: ${validStatuses.join(', ')}` });
+            }
+
+            const reviewerWhereCondition = { sectionHeadId };
+            if (status) {
+                reviewerWhereCondition.status = status;
+            }
+
             const papersIds = await reviewer.findAll({
-                where: { sectionHeadId },
+                where: reviewerWhereCondition,
                 attributes: ['paperId'],
             });
 
@@ -354,13 +363,11 @@ const paperController = {
 
             if (papersIds.length === 0) {
                 return res.status(200).json({
-                    data: [{
-                        sectionHead: {
-                            ...sectionHeadDetails.toJSON(),
-                            totalAssignedPapers: 0
-                        },
-                        assignedPapers: []
-                    }]
+                    sectionHead: {
+                        ...sectionHeadDetails.toJSON(),
+                        totalAssignedPapers: 0
+                    },
+                    assignedPapers: []
                 });
             }
 
@@ -374,33 +381,31 @@ const paperController = {
                 }
             });
 
-            const formattedPaperDetails = paperDetails.map(paper => {
-                return {
-                    mainManuscript: paper.mainManuscript,
-                    coverLetter: paper.coverLetter,
-                    supplementaryFile: paper.supplementaryFile,
-                    id: paper.id,
-                    userId: paper.userId,
-                    manuScriptTitle: paper.manuScriptTitle,
-                    manuScriptType: paper.manuScriptType,
-                    runningTitle: paper.runningTitle,
-                    subject: paper.subject,
-                    abstract: paper.abstract,
-                    correspondingAuthorName: paper.correspondingAuthorName,
-                    correspondingAuthorEmail: paper.correspondingAuthorEmail,
-                    noOfAuthors: paper.noOfAuthors,
-                    authors: paper.authors,
-                    reviewers: paper.reviewers,
-                    authorsConflict: paper.authorsConflict,
-                    dataAvailability: paper.dataAvailability,
-                    paperStatus: paper.paperStatus,
-                    statusHistory: paper.statusHistory || [],
-                    apcs: paper.apcs,
-                    studiedAndUnderstood: paper.studiedAndUnderstood,
-                    created_at: paper.createdAt,
-                    updated_at: paper.updatedAt
-                };
-            });
+            const formattedPaperDetails = paperDetails.map(paper => ({
+                mainManuscript: paper.mainManuscript,
+                coverLetter: paper.coverLetter,
+                supplementaryFile: paper.supplementaryFile,
+                id: paper.id,
+                userId: paper.userId,
+                manuScriptTitle: paper.manuScriptTitle,
+                manuScriptType: paper.manuScriptType,
+                runningTitle: paper.runningTitle,
+                subject: paper.subject,
+                abstract: paper.abstract,
+                correspondingAuthorName: paper.correspondingAuthorName,
+                correspondingAuthorEmail: paper.correspondingAuthorEmail,
+                noOfAuthors: paper.noOfAuthors,
+                authors: paper.authors,
+                reviewers: paper.reviewers,
+                authorsConflict: paper.authorsConflict,
+                dataAvailability: paper.dataAvailability,
+                paperStatus: paper.paperStatus,
+                statusHistory: paper.statusHistory || [],
+                apcs: paper.apcs,
+                studiedAndUnderstood: paper.studiedAndUnderstood,
+                created_at: paper.createdAt,
+                updated_at: paper.updatedAt
+            }));
 
             const totalAssignedPapers = papersIds.length;
 
@@ -417,7 +422,6 @@ const paperController = {
             return res.status(500).json({ message: "Internal server error" });
         }
     }
-
 };
 
 module.exports = paperController;

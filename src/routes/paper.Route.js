@@ -437,7 +437,7 @@ paperRouter.put('/updateStatus/:paperID', authenticate, authorize('cheifEditor')
 
 /**
  * @swagger
- * /papers/updateStatus/{paperID}:
+ * /papers/updateStatusForSectionHead/{paperID}:
  *   put:
  *     summary: Update the status of a paper by a Section Head and assign to section heads
  *     description: Allows a section head to update the status of a paper (e.g., assign it to themselves or others for review).
@@ -458,8 +458,13 @@ paperRouter.put('/updateStatus/:paperID', authenticate, authorize('cheifEditor')
  *           schema:
  *             type: object
  *             required:
+ *               - paperID
  *               - status
  *             properties:
+ *               paperID:
+ *                 type: integer
+ *                 description: ID of the paper to update
+ *                 example: 1
  *               status:
  *                 type: string
  *                 description: Status to update the paper to (e.g., 'assigned')
@@ -529,102 +534,7 @@ paperRouter.put('/updateStatus/:paperID', authenticate, authorize('cheifEditor')
  *                   example: Detailed error message
  */
 
-paperRouter.put('/updateStatus/:paperID', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
-
-/**
- * @swagger
- * /papers/update-status:
- *   patch:
- *     summary: Update the status of a paper for a section head
- *     tags:
- *       - SectionHeads And Cheif Editor
- *     description: Allows a section head to update the status of a paper (e.g., accepted or rejected). Only section heads are authorized to perform this action.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - paperID
- *               - status
- *             properties:
- *               paperID:
- *                 type: integer
- *                 description: ID of the paper to update.
- *                 example: 123
- *               status:
- *                 type: string
- *                 description: The new status to assign to the paper (accepted or rejected).
- *                 enum: [accepted, rejected]
- *                 example: accepted
- *               comment:
- *                 type: string
- *                 description: An optional comment to provide additional context for the status update.
- *                 example: "The paper has been accepted for its originality and impact."
- *               date:
- *                 type: string
- *                 format: date-time
- *                 description: The date when the status update is applied. Defaults to the current date if not provided.
- *                 example: "2025-01-15T10:30:00Z"
- *     responses:
- *       200:
- *         description: Paper status updated successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Paper status updated to 'accepted' successfully."
- *       400:
- *         description: Invalid input or action.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Invalid status. Valid statuses are: accepted, rejected."
- *       403:
- *         description: Unauthorized action (not a section head).
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Only a section head can update the paper status."
- *       404:
- *         description: Paper not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Paper not found."
- *       500:
- *         description: Server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Server error"
- *                 error:
- *                   type: string
- *                   example: "An unexpected error occurred."
- *     security:
- *       - bearerAuth: []
- */
-paperRouter.patch('/update-status:', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
+paperRouter.put('/updateStatusForSectionHead/:paperID', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
 
 /**
  * @swagger

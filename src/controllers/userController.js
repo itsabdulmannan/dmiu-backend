@@ -62,27 +62,35 @@ const userController = {
         try {
             const user = req.user;
             const receivedId = user.id;
-
+    
             if (receivedId) {
                 const receivedUser = await User.findByPk(receivedId);
-
+    
                 if (!receivedUser) {
                     return res.status(404).json({ status: false, message: 'User not found' });
                 }
-
-                if (receivedUser.role === 'author') {
+    
+                // Check if the user's role matches any of the allowed roles
+                if (['author', 'cheifEditor', 'sectionHead'].includes(receivedUser.role)) {
                     return res.status(200).json({
                         status: true,
                         message: `User with ID ${receivedId} fetched successfully`,
                         data: receivedUser,
                     });
+                } else {
+                    return res.status(403).json({
+                        status: false,
+                        message: 'Access denied. User does not have the required role.',
+                    });
                 }
             }
+    
+            return res.status(400).json({ status: false, message: 'Invalid user ID' });
         } catch (error) {
             console.error("Error while fetching users", error);
             res.status(500).json({ status: false, message: "Internal server error" });
         }
-    },
+    },    
     updateUser: async (req, res) => {
         try {
             const { id } = req.user;

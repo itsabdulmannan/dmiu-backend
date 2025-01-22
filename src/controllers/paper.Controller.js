@@ -300,7 +300,7 @@ const paperController = {
                     where: {
                         id: sectionHeadIds,
                     },
-                    attributes: ['id', 'firstName', 'lastName'],
+                    attributes: ['id', 'title', 'firstName', 'lastName', 'country', 'specialization', 'affiliation', 'email', 'phone', 'role'],
                 });
 
                 const papersWithReviewers = papersList.map((paper) => {
@@ -311,8 +311,15 @@ const paperController = {
                             return sectionHead
                                 ? {
                                     id: sectionHead.id,
+                                    title: sectionHead.title,
                                     firstName: sectionHead.firstName,
                                     lastName: sectionHead.lastName,
+                                    country: sectionHead.country,
+                                    specialization: sectionHead.specialization,
+                                    affiliation: sectionHead.affiliation,
+                                    email: sectionHead.email,
+                                    phone: sectionHead.phone,
+                                    role: sectionHead.role
                                 }
                                 : null;
                         })

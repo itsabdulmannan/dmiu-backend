@@ -14,6 +14,8 @@ app.use(cors());
 // Middleware for serving static files
 app.use('/assets', express.static(path.join(__dirname, '../public/assets')));
 
+require('./models/association')
+
 // Middleware for parsing incoming request data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

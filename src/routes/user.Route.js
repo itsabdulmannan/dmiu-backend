@@ -266,9 +266,22 @@ userRouter.post('/sectionheads/create', authenticate, authorize('cheifEditor'), 
  * /users/section-heads:
  *   get:
  *     summary: Get section heads based on role
- *     description: Fetches a list of users with the role of "sectionHead".
+ *     description: Fetches a list of users with the role of "sectionHead", with optional pagination.
  *     tags:
  *       - SectionHeads
+ *     parameters:
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: The number of records to skip. Default is 0.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of records to return. Default is 10.
  *     responses:
  *       200:
  *         description: Successfully fetched section heads.
@@ -300,6 +313,24 @@ userRouter.post('/sectionheads/create', authenticate, authorize('cheifEditor'), 
  *                       role:
  *                         type: string
  *                         example: sectionHead
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       description: The total number of section heads.
+ *                     offset:
+ *                       type: integer
+ *                       description: The number of records skipped.
+ *                     limit:
+ *                       type: integer
+ *                       description: The number of records returned per page.
+ *                     totalPages:
+ *                       type: integer
+ *                       description: The total number of pages available.
+ *                     currentPage:
+ *                       type: integer
+ *                       description: The current page number.
  *       400:
  *         description: Invalid or missing query parameter.
  *         content:
@@ -343,6 +374,7 @@ userRouter.post('/sectionheads/create', authenticate, authorize('cheifEditor'), 
  *                   type: string
  *                   example: Error message
  */
+
 userRouter.get('/section-heads', authenticate, authorize('cheifEditor'), userController.getSectionHead);
 
 module.exports = userRouter;

@@ -1,12 +1,6 @@
 const User = require('../models/user.Model');
-const { mailer, transporter } = require('../config/mailer');
+const { transporter } = require('../config/mailer');
 const bcrypt = require('bcrypt');
-const { use } = require('../routes/user.Route');
-const { Op } = require('sequelize');
-
-const generateOTP = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
-};
 
 const userController = {
     createUser: async (req, res) => {
@@ -62,15 +56,14 @@ const userController = {
         try {
             const user = req.user;
             const receivedId = user.id;
-    
+
             if (receivedId) {
                 const receivedUser = await User.findByPk(receivedId);
-    
+
                 if (!receivedUser) {
                     return res.status(404).json({ status: false, message: 'User not found' });
                 }
-    
-                // Check if the user's role matches any of the allowed roles
+
                 if (['author', 'cheifEditor', 'sectionHead'].includes(receivedUser.role)) {
                     return res.status(200).json({
                         status: true,
@@ -84,13 +77,13 @@ const userController = {
                     });
                 }
             }
-    
+
             return res.status(400).json({ status: false, message: 'Invalid user ID' });
         } catch (error) {
             console.error("Error while fetching users", error);
             res.status(500).json({ status: false, message: "Internal server error" });
         }
-    },    
+    },
     updateUser: async (req, res) => {
         try {
             const { id } = req.user;
@@ -204,16 +197,37 @@ const userController = {
     },
     getSectionHead: async (req, res) => {
         try {
-            const sectionHeads = await User.findAll({ where: { role: 'sectionHead' } });
+            const { offset, limit } = req.query;
+
+            const offsetValue = parseInt(offset) || 0;
+            const limitValue = parseInt(limit) || 10;
+
+            const totalSectionHeads = await User.count({ where: { role: 'sectionHead' } });
+
+            const sectionHeads = await User.findAll({
+                where: { role: 'sectionHead' },
+                offset: offsetValue,
+                limit: limitValue,
+            });
 
             if (sectionHeads.length === 0) {
-                return res.status(404).json({ status: false, message: "No section heads found" });
+                return res.status(404).json({
+                    status: false,
+                    message: "No section heads found"
+                });
             }
 
             return res.status(200).json({
                 status: true,
                 message: "Section heads fetched successfully",
-                data: sectionHeads
+                data: sectionHeads,
+                pagination: {
+                    total: totalSectionHeads,
+                    offset: offsetValue,
+                    limit: limitValue,
+                    totalPages: Math.ceil(totalSectionHeads / limitValue),
+                    currentPage: Math.floor(offsetValue / limitValue) + 1,
+                }
             });
         } catch (error) {
             return res.status(500).json({

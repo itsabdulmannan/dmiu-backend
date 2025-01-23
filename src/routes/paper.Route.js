@@ -231,6 +231,18 @@ paperRouter.post('/create', upload.fields([
  *           type: integer
  *         required: false
  *         description: The ID of a specific paper to retrieve. If provided, only this paper will be returned with its assigned section heads (if applicable).
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: The number of records to skip. Default is 0.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of records to return. Default is 10.
  *     responses:
  *       200:
  *         description: Successfully retrieved the list of papers.
@@ -239,7 +251,13 @@ paperRouter.post('/create', upload.fields([
  *             schema:
  *               type: object
  *               properties:
- *                 papers:
+ *                 status:
+ *                   type: boolean
+ *                   description: Whether the operation was successful.
+ *                 message:
+ *                   type: string
+ *                   description: A message describing the result.
+ *                 data:
  *                   type: array
  *                   items:
  *                     type: object
@@ -269,6 +287,24 @@ paperRouter.post('/create', upload.fields([
  *                             lastName:
  *                               type: string
  *                               description: The last name of the section head.
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       description: The total number of papers matching the query.
+ *                     offset:
+ *                       type: integer
+ *                       description: The number of records skipped (current offset).
+ *                     limit:
+ *                       type: integer
+ *                       description: The number of records per page (current limit).
+ *                     totalPages:
+ *                       type: integer
+ *                       description: The total number of pages available.
+ *                     currentPage:
+ *                       type: integer
+ *                       description: The current page number.
  *       400:
  *         description: Missing or invalid query parameter.
  *         content:
@@ -303,6 +339,7 @@ paperRouter.post('/create', upload.fields([
  *                   type: string
  *                   example: Error details here
  */
+
 paperRouter.get('/fetch-papers/status', paperController.getStatusBasePapers);
 
 /**
@@ -327,15 +364,34 @@ paperRouter.get('/fetch-papers/status', paperController.getStatusBasePapers);
  *         schema:
  *           type: boolean
  *         description: Set to true to retrieve papers posted exactly 30 days ago
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: The number of records to skip. Default is 0.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of records to return. Default is 10.
  *     responses:
  *       200:
  *         description: A list of papers or a single paper
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Paper'
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Paper'
  *       404:
  *         description: Paper not found
  *       500:
@@ -536,7 +592,7 @@ paperRouter.put('/sectionHead/updateStatus/:paperID', authenticate, authorize('s
  * /papers/assigned-papers:
  *   get:
  *     summary: Get all papers assigned to a specific section head
- *     description: Retrieve all the paper IDs assigned to a particular section head by `sectionHeadId`. Optionally, filter the assigned papers by their `status`.
+ *     description: Retrieve all the paper IDs assigned to a particular section head by `sectionHeadId`. Optionally, filter the assigned papers by their `status` and paginate the results.
  *     parameters:
  *       - in: query
  *         name: sectionHeadId
@@ -551,9 +607,23 @@ paperRouter.put('/sectionHead/updateStatus/:paperID', authenticate, authorize('s
  *           type: string
  *           enum: [assigned, accepted, rejected]
  *         description: Filter the assigned papers based on their status. Valid values are `assigned`, `accepted`, and `rejected`.
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: The number of items to skip for pagination. Defaults to 0.
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of items to return per page. Defaults to 10.
  *     responses:
  *       200:
- *         description: A list of papers assigned to the section head
+ *         description: A list of papers assigned to the section head with pagination details
  *         content:
  *           application/json:
  *             schema:
@@ -608,6 +678,18 @@ paperRouter.put('/sectionHead/updateStatus/:paperID', authenticate, authorize('s
  *                         type: string
  *                         format: date-time
  *                         description: The date and time when the paper was last updated.
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     offset:
+ *                       type: integer
+ *                       description: The offset used for pagination.
+ *                     limit:
+ *                       type: integer
+ *                       description: The limit used for pagination.
+ *                     total:
+ *                       type: integer
+ *                       description: The total number of papers available.
  *       400:
  *         description: Bad request, sectionHeadId is missing or invalid
  *       500:
@@ -615,5 +697,83 @@ paperRouter.put('/sectionHead/updateStatus/:paperID', authenticate, authorize('s
  */
 
 paperRouter.get('/assigned-papers', paperController.getAssignedPapersOfSectionHead);
+
+/**
+ * @swagger
+ * /papers/author:
+ *   get:
+ *     summary: Get all papers for a specific author with pagination and optional search filters
+ *     tags: [Papers]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: The userId of the author to retrieve papers for (optional)
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: The number of records to skip for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of records to retrieve for pagination
+ *       - in: query
+ *         name: title
+ *         schema:
+ *           type: string
+ *         description: Title of the author to filter papers by (matches with `title` in the `users` table)
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Name of the author to filter papers by (can match `firstName` or `lastName` in the `users` table)
+ *       - in: query
+ *         name: manuScriptTitle
+ *         schema:
+ *           type: string
+ *         description: Manuscript title to filter papers by (matches with `manuScriptTitle` in the `papers` table)
+ *     responses:
+ *       200:
+ *         description: A list of papers for the specified author with pagination
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   description: The success status of the request
+ *                 message:
+ *                   type: string
+ *                   description: A message indicating the result of the request
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Paper'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       description: Total number of papers for the userId
+ *                     offset:
+ *                       type: integer
+ *                       description: The number of records skipped
+ *                     limit:
+ *                       type: integer
+ *                       description: The number of records retrieved
+ *       404:
+ *         description: No papers found matching the criteria for the provided userId
+ *       500:
+ *         description: Internal server error
+ */
+
+paperRouter.get('/author', paperController.getPapersForAuthor);
 
 module.exports = paperRouter;

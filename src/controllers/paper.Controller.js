@@ -5,17 +5,22 @@ const reviewer = require('../models/reviewer.Model')
 
 const paperController = {
     addPaper: async (req, res) => {
+        console.log(req.files?.["coverLetter"], "this is file");
         const user = req.user;
         const userId = user.id;
-        const checkUser = await User.findByPk(userId);
-        if (!checkUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        const userRole = checkUser.role;
-        if (userRole !== 'author') {
-            return res.status(403).json({ message: 'Only an author can add a paper' });
-        }
+
         try {
+            const checkUser = await User.findByPk(userId);
+            if (!checkUser) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            const userRole = checkUser.role;
+            if (userRole !== "author") {
+                return res
+                    .status(403)
+                    .json({ message: "Only an author can add a paper" });
+            }
             const {
                 manuScriptTitle,
                 manuScriptType,
@@ -30,39 +35,69 @@ const paperController = {
                 authorsConflict,
                 dataAvailability,
                 apcs,
-                studiedAndUnderstood
+                studiedAndUnderstood,
             } = req.body;
-
-            const authors = JSON.parse(authorsRaw);
-            const reviewers = JSON.parse(reviewersRaw);
-
-            const mainManuscript = req.files['mainManuscript'] ? `/assets/${req.files['mainManuscript'][0].filename}` : null;
-            const coverLetter = req.files['coverLetter'] ? `/assets/${req.files['coverLetter'][0].filename}` : null;
-            const supplementaryFile = req.files['supplementaryFile'] ? `/assets/${req.files['supplementaryFile'][0].filename}` : null;
-
-            if (!Array.isArray(authors) || authors.length === 0) {
-                return res.status(400).json({ message: 'Authors information must be provided as an array of objects.' });
+            let authors;
+            let reviewers;
+            try {
+                authors =
+                    typeof authorsRaw === "string" ? JSON.parse(authorsRaw) : authorsRaw;
+                reviewers =
+                    typeof reviewersRaw === "string"
+                        ? JSON.parse(reviewersRaw)
+                        : reviewersRaw;
+            } catch (parseError) {
+                return res
+                    .status(400)
+                    .json({ message: "Invalid JSON format for authors or reviewers." });
             }
-
-            if (authors.length < 3) {
-                return res.status(400).json({ message: 'At least 3 authors are required.' });
+            if (!Array.isArray(authors) || authors.length < 3) {
+                return res
+                    .status(400)
+                    .json({ message: "At least 3 authors are required." });
             }
-
             for (const author of authors) {
-                if (!author.fullName || !author.affiliation || !author.country || !author.email) {
-                    return res.status(400).json({ message: 'Each author must have fullName, affiliation, country, and email.' });
+                if (
+                    !author.fullName ||
+                    !author.affiliation ||
+                    !author.country ||
+                    !author.email
+                ) {
+                    return res.status(400).json({
+                        message:
+                            "Each author must have fullName, affiliation, country, and email.",
+                    });
                 }
             }
 
             if (!Array.isArray(reviewers) || reviewers.length < 3) {
-                return res.status(400).json({ message: 'At least 3 reviewers are required.' });
+                return res
+                    .status(400)
+                    .json({ message: "At least 3 reviewers are required." });
             }
-
             for (const reviewer of reviewers) {
-                if (!reviewer.fullName || !reviewer.affiliation || !reviewer.country || !reviewer.email) {
-                    return res.status(400).json({ message: 'Each reviewer must have fullName, affiliation, country, and email.' });
+                if (
+                    !reviewer.fullName ||
+                    !reviewer.affiliation ||
+                    !reviewer.country ||
+                    !reviewer.email
+                ) {
+                    return res.status(400).json({
+                        message:
+                            "Each reviewer must have fullName, affiliation, country, and email.",
+                    });
                 }
             }
+
+            const mainManuscript = req.files?.["mainManuscript"]
+                ? `/assets/${req.files["mainManuscript"][0].filename}`
+                : null;
+            const coverLetter = req.files?.["coverLetter"]
+                ? `/assets/${req.files["coverLetter"][0].filename}`
+                : null;
+            const supplementaryFile = req.files?.["supplementaryFile"]
+                ? `/assets/${req.files["supplementaryFile"][0].filename}`
+                : null;
 
             const newPaper = await papers.create({
                 userId,
@@ -82,19 +117,22 @@ const paperController = {
                 coverLetter,
                 supplementaryFile,
                 apcs,
-                studiedAndUnderstood
+                studiedAndUnderstood,
             });
 
-            return res.status(201).json({ message: 'Paper added successfully!', paper: newPaper });
-
+            return res
+                .status(201)
+                .json({ message: "Paper added successfully!", paper: newPaper });
         } catch (error) {
             console.error(error);
-            return res.status(500).json({ message: 'Server error', error: error.message });
+            return res
+                .status(500)
+                .json({ message: "Server error", error: error.message });
         }
     },
     getAllPapers: async (req, res) => {
         try {
-            const { id, archive, inPress } = req.query;
+            const { id, archive, inPress, offset, limit } = req.query;
             console.log(req.query);
 
             if (id) {
@@ -118,13 +156,33 @@ const paperController = {
                 condition.created_at = { [Op.gt]: oneMonthAgoStart };
             }
 
-            const papersList = await papers.findAll({ where: condition });
+            const offsetValue = parseInt(offset) || 0;
+            const limitValue = parseInt(limit) || 10;
+
+            const totalPapers = await papers.count({ where: condition });
+
+            const papersList = await papers.findAll({
+                where: condition,
+                offset: offsetValue,
+                limit: limitValue
+            });
 
             if (papersList.length === 0) {
                 return res.status(404).json({ message: 'No papers found matching the criteria.' });
             }
 
-            return res.status(200).json({ status: true, message: "Papers fetched successfully.", data: papersList });
+            return res.status(200).json({
+                status: true,
+                message: "Papers fetched successfully.",
+                data: papersList,
+                pagination: {
+                    total: totalPapers,
+                    offset: offsetValue,
+                    limit: limitValue,
+                    totalPages: Math.ceil(totalPapers / limitValue),
+                    currentPage: Math.floor(offsetValue / limitValue) + 1
+                }
+            });
 
         } catch (error) {
             console.error("Error occurred while fetching papers:", error);
@@ -246,11 +304,7 @@ const paperController = {
     },
     getStatusBasePapers: async (req, res) => {
         try {
-            const { param, paperId } = req.query;
-
-            // if (!param && !paperId) {
-            //     return res.status(400).json({ message: 'Missing parameter in request body.' });
-            // }
+            const { param, paperId, offset, limit } = req.query;
 
             let paperStatus;
             if (param) {
@@ -276,8 +330,15 @@ const paperController = {
             if (paperStatus) whereClause.paperStatus = paperStatus;
             if (paperId) whereClause.id = paperId;
 
+            const offsetValue = parseInt(offset) || 0;
+            const limitValue = parseInt(limit) || 10;
+
+            const totalPapers = await papers.count({ where: whereClause });
+
             const papersList = await papers.findAll({
                 where: whereClause,
+                offset: offsetValue,
+                limit: limitValue,
             });
 
             if (papersList.length === 0) {
@@ -319,7 +380,7 @@ const paperController = {
                                     affiliation: sectionHead.affiliation,
                                     email: sectionHead.email,
                                     phone: sectionHead.phone,
-                                    role: sectionHead.role
+                                    role: sectionHead.role,
                                 }
                                 : null;
                         })
@@ -331,10 +392,28 @@ const paperController = {
                     };
                 });
 
-                return res.status(200).json({ papers: papersWithReviewers });
+                return res.status(200).json({
+                    papers: papersWithReviewers,
+                    pagination: {
+                        total: totalPapers,
+                        offset: offsetValue,
+                        limit: limitValue,
+                        totalPages: Math.ceil(totalPapers / limitValue),
+                        currentPage: Math.floor(offsetValue / limitValue) + 1,
+                    },
+                });
             }
 
-            return res.status(200).json({ papers: papersList });
+            return res.status(200).json({
+                papers: papersList,
+                pagination: {
+                    total: totalPapers,
+                    offset: offsetValue,
+                    limit: limitValue,
+                    totalPages: Math.ceil(totalPapers / limitValue),
+                    currentPage: Math.floor(offsetValue / limitValue) + 1,
+                },
+            });
         } catch (error) {
             console.error('Error while fetching papers based on status', error);
             return res.status(500).json({ message: 'Server error', error: error.message });
@@ -342,7 +421,7 @@ const paperController = {
     },
     getAssignedPapersOfSectionHead: async (req, res) => {
         try {
-            const { sectionHeadId, status } = req.query;
+            const { sectionHeadId, status, offset, limit } = req.query;
 
             if (!sectionHeadId) {
                 return res.status(400).json({ message: "sectionHeadId is required" });
@@ -353,6 +432,9 @@ const paperController = {
                 return res.status(400).json({ message: `Invalid status. Valid statuses are: ${validStatuses.join(', ')}` });
             }
 
+            const pageOffset = parseInt(offset) || 0;
+            const pageLimit = parseInt(limit) || 10;
+
             const reviewerWhereCondition = { sectionHeadId };
             if (status) {
                 reviewerWhereCondition.status = status;
@@ -361,6 +443,8 @@ const paperController = {
             const papersIds = await reviewer.findAll({
                 where: reviewerWhereCondition,
                 attributes: ['paperId'],
+                offset: pageOffset,
+                limit: pageLimit
             });
 
             const sectionHeadDetails = await User.findByPk(sectionHeadId);
@@ -375,7 +459,12 @@ const paperController = {
                         ...sectionHeadDetails.toJSON(),
                         totalAssignedPapers: 0
                     },
-                    assignedPapers: []
+                    assignedPapers: [],
+                    pagination: {
+                        offset: pageOffset,
+                        limit: pageLimit,
+                        total: 0
+                    }
                 });
             }
 
@@ -415,19 +504,84 @@ const paperController = {
                 updated_at: paper.updatedAt
             }));
 
-            const totalAssignedPapers = papersIds.length;
+            const totalAssignedPapers = await reviewer.count({
+                where: reviewerWhereCondition
+            });
 
             return res.status(200).json({
                 sectionHead: {
                     ...sectionHeadDetails.toJSON(),
-                    totalAssignedPapers: totalAssignedPapers
+                    totalAssignedPapers
                 },
-                assignedPapers: formattedPaperDetails
+                assignedPapers: formattedPaperDetails,
+                pagination: {
+                    offset: pageOffset,
+                    limit: pageLimit,
+                    total: totalAssignedPapers
+                }
             });
 
         } catch (error) {
             console.error("Error while getting assigned papers and section head details", error);
             return res.status(500).json({ message: "Internal server error" });
+        }
+    },
+    getPapersForAuthor: async (req, res) => {
+        try {
+            const offset = parseInt(req.query.offset) || 0;
+            const limit = parseInt(req.query.limit) || 10;
+            const { title, name, manuScriptTitle, userId } = req.query;
+
+            const paperConditions = {};
+            if (userId) {
+                paperConditions.userId = userId;
+            }
+            if (manuScriptTitle) {
+                paperConditions.manuScriptTitle = { [Op.like]: `%${manuScriptTitle}%` };
+            }
+
+            const userConditions = {};
+            if (title) {
+                userConditions.title = { [Op.like]: `%${title}%` };
+            }
+            if (name) {
+                userConditions[Op.or] = [
+                    { firstName: { [Op.like]: `%${name}%` } },
+                    { lastName: { [Op.like]: `%${name}%` } },
+                ];
+            }
+
+            const { count, rows: foundPapers } = await papers.findAndCountAll({
+                where: paperConditions,
+                include: [
+                    {
+                        model: User,
+                        as: 'author',
+                        where: userConditions,
+                        attributes: ['id', 'title', 'firstName', 'lastName'],
+                    },
+                ],
+                offset,
+                limit,
+            });
+
+            if (!foundPapers || foundPapers.length === 0) {
+                return res.status(404).json({ message: "No papers found matching the criteria." });
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: "Papers retrieved successfully.",
+                data: foundPapers,
+                pagination: {
+                    total: count,
+                    offset,
+                    limit,
+                },
+            });
+        } catch (error) {
+            console.error("Error while fetching papers for author:", error);
+            return res.status(500).json({ message: "Internal server error", error: error.message });
         }
     }
 };

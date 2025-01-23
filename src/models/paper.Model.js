@@ -17,7 +17,7 @@ const papers = sequelize.define('papers', {
     },
     manuScriptType: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false 
     },
     runningTitle: {
         type: DataTypes.STRING,
@@ -42,19 +42,20 @@ const papers = sequelize.define('papers', {
     noOfAuthors: {
         type: DataTypes.INTEGER,
         allowNull: false
-    },
+    }, 
     authors: {
         type: DataTypes.JSONB,
         allowNull: false,
         defaultValue: []
     },
     reviewers: {
-        type: DataTypes.JSONB,
+        type: DataTypes.JSONB, 
         allowNull: false,
         defaultValue: []
     },
     authorsConflict: {
         type: DataTypes.TEXT,
+        defaultValue:'No',
         allowNull: true
     },
     dataAvailability: {

@@ -2,6 +2,7 @@ const papers = require("../models/paper.Model");
 const { Op } = require("sequelize");
 const User = require("../models/user.Model");
 const reviewer = require("../models/reviewer.Model");
+const sequelize = require("../config/database");
 
 const paperController = {
     addPaper: async (req, res) => {
@@ -582,7 +583,7 @@ const paperController = {
         try {
             const offset = parseInt(req.query.offset) || 0;
             const limit = parseInt(req.query.limit) || 10;
-            const { title, name, manuScriptTitle, userId } = req.query;
+            const { title, name, manuScriptTitle, userId, authorName } = req.query;
 
             const paperConditions = {};
             if (userId) {
@@ -601,6 +602,18 @@ const paperController = {
                     { firstName: { [Op.like]: `%${name}%` } },
                     { lastName: { [Op.like]: `%${name}%` } },
                 ];
+            }
+
+            let rawQuery = {};
+            if (authorName) {
+                rawQuery = sequelize.literal(`
+                    EXISTS (
+                        SELECT 1
+                        FROM jsonb_array_elements("papers"."authors") AS author
+                        WHERE author->>'fullName' ILIKE '%${authorName}%'
+                    )
+                `);
+                paperConditions[Op.and] = rawQuery;
             }
 
             const { count, rows: foundPapers } = await papers.findAndCountAll({

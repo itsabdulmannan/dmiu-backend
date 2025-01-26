@@ -771,6 +771,11 @@ paperRouter.get(
  *         schema:
  *           type: string
  *         description: Manuscript title to filter papers by (matches with `manuScriptTitle` in the `papers` table)
+ *       - in: query
+ *         name: authorName
+ *         schema:
+ *           type: string
+ *         description: Full name of an author to filter papers by (matches with `fullName` in the `authors` array)
  *     responses:
  *       200:
  *         description: A list of papers for the specified author with pagination
@@ -794,7 +799,7 @@ paperRouter.get(
  *                   properties:
  *                     total:
  *                       type: integer
- *                       description: Total number of papers for the userId
+ *                       description: Total number of papers matching the criteria
  *                     offset:
  *                       type: integer
  *                       description: The number of records skipped
@@ -802,7 +807,7 @@ paperRouter.get(
  *                       type: integer
  *                       description: The number of records retrieved
  *       404:
- *         description: No papers found matching the criteria for the provided userId
+ *         description: No papers found matching the criteria
  *       500:
  *         description: Internal server error
  */

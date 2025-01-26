@@ -1,7 +1,7 @@
-const express = require('express');
-const paperController = require('../controllers/paper.Controller');
-const upload = require('../middleware/multer');
-const { authenticate, authorize } = require('../middleware/auth');
+const express = require("express");
+const paperController = require("../controllers/paper.Controller");
+const upload = require("../middleware/multer");
+const { authenticate, authorize } = require("../middleware/auth");
 const paperRouter = express.Router();
 
 /**
@@ -49,7 +49,7 @@ const paperRouter = express.Router();
  *                 type: string
  *               email:
  *                 type: string
- *           default: 
+ *           default:
  *             - fullName: "John Doe"
  *               affiliation: "University X"
  *               country: "Country Y"
@@ -199,11 +199,17 @@ const paperRouter = express.Router();
  *         description: Internal server error
  */
 
-paperRouter.post('/create', upload.fields([
-    { name: 'mainManuscript', maxCount: 1 },
-    { name: 'coverLetter', maxCount: 1 },
-    { name: 'supplementaryFile', maxCount: 1 }
-]), authenticate, authorize('author'), paperController.addPaper);
+paperRouter.post(
+    "/create",
+    upload.fields([
+        { name: "mainManuscript", maxCount: 1 },
+        { name: "coverLetter", maxCount: 1 },
+        { name: "supplementaryFile", maxCount: 1 },
+    ]),
+    authenticate,
+    authorize("author"),
+    paperController.addPaper
+);
 
 /**
  * @swagger
@@ -340,13 +346,13 @@ paperRouter.post('/create', upload.fields([
  *                   example: Error details here
  */
 
-paperRouter.get('/fetch-papers/status', paperController.getStatusBasePapers);
+paperRouter.get("/fetch-papers/status", paperController.getStatusBasePapers);
 
 /**
  * @swagger
  * /papers/get:
  *   get:
- *     summary: Get all papers, papers by ID, or filtered papers by archive or inPress
+ *     summary: Get all papers, papers by ID, or filtered papers by type (archive or inPress)
  *     tags: [Papers]
  *     parameters:
  *       - in: query
@@ -355,15 +361,11 @@ paperRouter.get('/fetch-papers/status', paperController.getStatusBasePapers);
  *           type: string
  *         description: Paper ID
  *       - in: query
- *         name: archive
+ *         name: type
  *         schema:
- *           type: boolean
- *         description: Set to true to retrieve papers older than 30 days
- *       - in: query
- *         name: inPress
- *         schema:
- *           type: boolean
- *         description: Set to true to retrieve papers posted exactly 30 days ago
+ *           type: string
+ *           enum: [archive, inPress]
+ *         description: Optional. Specify 'archive' for papers older than 30 days or 'inPress' for papers created in the last 30 days.
  *       - in: query
  *         name: offset
  *         schema:
@@ -392,13 +394,31 @@ paperRouter.get('/fetch-papers/status', paperController.getStatusBasePapers);
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Paper'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       description: Total number of records
+ *                     offset:
+ *                       type: integer
+ *                       description: The number of records skipped
+ *                     limit:
+ *                       type: integer
+ *                       description: The number of records returned per page
+ *                     totalPages:
+ *                       type: integer
+ *                       description: Total number of pages
+ *                     currentPage:
+ *                       type: integer
+ *                       description: The current page number
  *       404:
- *         description: Paper not found
+ *         description: Paper not found or no papers matching the criteria
  *       500:
  *         description: Internal server error
  */
 
-paperRouter.get('/get', paperController.getAllPapers);
+paperRouter.get("/get", paperController.getAllPapers);
 
 /**
  * @swagger
@@ -489,7 +509,12 @@ paperRouter.get('/get', paperController.getAllPapers);
  *                   example: Detailed error message
  */
 
-paperRouter.put('/updateStatus/:paperID', authenticate, authorize('cheifEditor'), paperController.updatePaperStatusForCheifEditor);
+paperRouter.put(
+    "/updateStatus/:paperID",
+    authenticate,
+    authorize("cheifEditor"),
+    paperController.updatePaperStatusForCheifEditor
+);
 
 /**
  * @swagger
@@ -585,7 +610,12 @@ paperRouter.put('/updateStatus/:paperID', authenticate, authorize('cheifEditor')
  *                   example: Detailed error message
  */
 
-paperRouter.put('/sectionHead/updateStatus/:paperID', authenticate, authorize('sectionHead'), paperController.updatePaperStatusForSectionHead);
+paperRouter.put(
+    "/sectionHead/updateStatus/:paperID",
+    authenticate,
+    authorize("sectionHead"),
+    paperController.updatePaperStatusForSectionHead
+);
 
 /**
  * @swagger
@@ -696,7 +726,10 @@ paperRouter.put('/sectionHead/updateStatus/:paperID', authenticate, authorize('s
  *         description: Internal server error
  */
 
-paperRouter.get('/assigned-papers', paperController.getAssignedPapersOfSectionHead);
+paperRouter.get(
+    "/assigned-papers",
+    paperController.getAssignedPapersOfSectionHead
+);
 
 /**
  * @swagger
@@ -774,6 +807,6 @@ paperRouter.get('/assigned-papers', paperController.getAssignedPapersOfSectionHe
  *         description: Internal server error
  */
 
-paperRouter.get('/author', paperController.getPapersForAuthor);
+paperRouter.get("/author", paperController.getPapersForAuthor);
 
 module.exports = paperRouter;

@@ -95,7 +95,7 @@ const papers = sequelize.define('papers', {
         type: DataTypes.JSONB,
         allowNull: false,
         defaultValue: []
-    },
+    }, 
     apcs: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

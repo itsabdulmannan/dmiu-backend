@@ -1,7 +1,7 @@
-const papers = require('../models/paper.Model');
-const { Op } = require('sequelize');
-const User = require('../models/user.Model');
-const reviewer = require('../models/reviewer.Model')
+const papers = require("../models/paper.Model");
+const { Op } = require("sequelize");
+const User = require("../models/user.Model");
+const reviewer = require("../models/reviewer.Model");
 
 const paperController = {
     addPaper: async (req, res) => {
@@ -130,45 +130,45 @@ const paperController = {
                 .json({ message: "Server error", error: error.message });
         }
     },
+
     getAllPapers: async (req, res) => {
         try {
-            const { id, archive, inPress, offset, limit } = req.query;
-            console.log(req.query);
+            const { id, type, offset, limit } = req.query;
 
             if (id) {
                 const paper = await papers.findByPk(id);
                 if (!paper) {
-                    return res.status(404).json({ message: 'Paper not found' });
+                    return res.status(404).json({ message: "Paper not found" });
                 }
                 return res.status(200).json(paper);
             }
 
-            let condition = { paperStatus: 'published' };
+            let condition = { paperStatus: "published" };
             const currentDate = new Date();
             const thirtyDaysAgo = new Date(currentDate);
             thirtyDaysAgo.setDate(currentDate.getDate() - 30);
             const oneMonthAgoStart = new Date(currentDate);
             oneMonthAgoStart.setDate(currentDate.getDate() - 30);
 
-            if (archive === 'true') {
+            if (type === "archive") {
                 condition.created_at = { [Op.lt]: thirtyDaysAgo };
-            } else if (inPress === 'true') {
+            } else if (type === "inPress") {
                 condition.created_at = { [Op.gt]: oneMonthAgoStart };
             }
 
             const offsetValue = parseInt(offset) || 0;
             const limitValue = parseInt(limit) || 10;
 
-            const totalPapers = await papers.count({ where: condition });
-
-            const papersList = await papers.findAll({
+            const { count: totalPapers, rows: papersList } = await papers.findAndCountAll({
                 where: condition,
                 offset: offsetValue,
-                limit: limitValue
+                limit: limitValue,
             });
 
             if (papersList.length === 0) {
-                return res.status(404).json({ message: 'No papers found matching the criteria.' });
+                return res
+                    .status(404)
+                    .json({ message: "No papers found matching the criteria." });
             }
 
             return res.status(200).json({
@@ -180,15 +180,17 @@ const paperController = {
                     offset: offsetValue,
                     limit: limitValue,
                     totalPages: Math.ceil(totalPapers / limitValue),
-                    currentPage: Math.floor(offsetValue / limitValue) + 1
-                }
+                    currentPage: Math.floor(offsetValue / limitValue) + 1,
+                },
             });
-
         } catch (error) {
             console.error("Error occurred while fetching papers:", error);
-            return res.status(500).json({ message: 'Server error', error: error.message });
+            return res
+                .status(500)
+                .json({ message: "Server error", error: error.message });
         }
     },
+
     updatePaperStatusForCheifEditor: async (req, res) => {
         try {
             const { paperID } = req.params;
@@ -197,44 +199,51 @@ const paperController = {
             const userId = user.id;
             const paperRecord = await papers.findByPk(paperID);
             if (!paperRecord) {
-                return res.status(404).json({ message: 'Paper not found' });
+                return res.status(404).json({ message: "Paper not found" });
             }
 
             const userRecord = await User.findByPk(userId);
             if (!userRecord) {
-                return res.status(404).json({ message: 'User not found' });
+                return res.status(404).json({ message: "User not found" });
             }
 
             const userRole = userRecord.role;
-            if (userRole !== 'cheifEditor') {
-                return res.status(403).json({ message: 'Only a chief editor can update the paper status' });
+            if (userRole !== "cheifEditor") {
+                return res
+                    .status(403)
+                    .json({ message: "Only a chief editor can update the paper status" });
             }
 
             let newStatus;
             let sectionHeads = [];
-            if (status === 'acceptAndPublish') {
-                newStatus = 'published';
-            } else if (status === 'rejected') {
-                newStatus = 'rejected';
-            } else if (status === 'assigned') {
+            if (status === "acceptAndPublish") {
+                newStatus = "published";
+            } else if (status === "rejected") {
+                newStatus = "rejected";
+            } else if (status === "assigned") {
                 if (!sectionHeadIds || sectionHeadIds.length === 0) {
-                    return res.status(400).json({ message: 'Section head IDs are required when the status is assigned' });
+                    return res.status(400).json({
+                        message:
+                            "Section head IDs are required when the status is assigned",
+                    });
                 }
 
-                newStatus = 'underReview';
+                newStatus = "underReview";
                 for (let sectionHeadId of sectionHeadIds) {
                     const sectionHead = await User.findByPk(sectionHeadId);
-                    if (!sectionHead || sectionHead.role !== 'sectionHead') {
-                        return res.status(404).json({ message: `Section head with ID ${sectionHeadId} not found or invalid role` });
+                    if (!sectionHead || sectionHead.role !== "sectionHead") {
+                        return res.status(404).json({
+                            message: `Section head with ID ${sectionHeadId} not found or invalid role`,
+                        });
                     }
 
                     await reviewer.create({
                         sectionHeadId: sectionHead.id,
                         paperId: paperID,
-                        status: 'assigned',
+                        status: "assigned",
                         statusHistory: [
                             {
-                                status: 'assigned',
+                                status: "assigned",
                                 comment: `Assigned to section head: ${sectionHead.firstName} ${sectionHead.lastName}`,
                                 date: date || new Date(),
                             },
@@ -244,7 +253,7 @@ const paperController = {
                     sectionHeads.push(sectionHead);
                 }
             } else {
-                return res.status(400).json({ message: 'Invalid status parameter' });
+                return res.status(400).json({ message: "Invalid status parameter" });
             }
 
             paperRecord.paperStatus = newStatus;
@@ -255,11 +264,14 @@ const paperController = {
 
             await paperRecord.save();
 
-            return res.status(200).json({ status: true, message: 'Paper status updated successfully' });
-
+            return res
+                .status(200)
+                .json({ status: true, message: "Paper status updated successfully" });
         } catch (error) {
             console.error("Error while updating paper status", error);
-            return res.status(500).json({ message: 'Server error', error: error.message });
+            return res
+                .status(500)
+                .json({ message: "Server error", error: error.message });
         }
     },
     updatePaperStatusForSectionHead: async (req, res) => {
@@ -271,19 +283,25 @@ const paperController = {
             const sectionHeadId = user.id;
             const paperRecord = await papers.findByPk(paperID);
             if (!paperRecord) {
-                return res.status(404).json({ message: 'Paper not found' });
+                return res.status(404).json({ message: "Paper not found" });
             }
 
             const userRecord = await User.findByPk(sectionHeadId);
-            if (!userRecord || userRecord.role !== 'sectionHead') {
-                return res.status(403).json({ message: 'Only a section head can update the paper status' });
+            if (!userRecord || userRecord.role !== "sectionHead") {
+                return res
+                    .status(403)
+                    .json({ message: "Only a section head can update the paper status" });
             }
 
-            if (paperRecord.paperStatus !== 'underReview') {
-                return res.status(400).json({ message: 'Paper must be under review before assigning a section head' });
+            if (paperRecord.paperStatus !== "underReview") {
+                return res.status(400).json({
+                    message: "Paper must be under review before assigning a section head",
+                });
             }
 
-            const reviewerRecord = await reviewer.findOne({ where: { paperId: paperID, sectionHeadId } });
+            const reviewerRecord = await reviewer.findOne({
+                where: { paperId: paperID, sectionHeadId },
+            });
 
             reviewerRecord.status = status;
             const statusHistory = reviewerRecord.statusHistory || [];
@@ -296,10 +314,17 @@ const paperController = {
 
             await reviewerRecord.save();
 
-            return res.status(200).json({ message: 'Paper status updated successfully' });
+            return res
+                .status(200)
+                .json({ message: "Paper status updated successfully" });
         } catch (error) {
-            console.error("Error while updating paper status for section head", error);
-            return res.status(500).json({ message: 'Server error', error: error.message });
+            console.error(
+                "Error while updating paper status for section head",
+                error
+            );
+            return res
+                .status(500)
+                .json({ message: "Server error", error: error.message });
         }
     },
     getStatusBasePapers: async (req, res) => {
@@ -309,20 +334,22 @@ const paperController = {
             let paperStatus;
             if (param) {
                 switch (param) {
-                    case 'accepted':
-                        paperStatus = 'published';
+                    case "accepted":
+                        paperStatus = "published";
                         break;
-                    case 'submitted':
-                        paperStatus = 'submitted';
+                    case "submitted":
+                        paperStatus = "submitted";
                         break;
-                    case 'rejected':
-                        paperStatus = 'rejected';
+                    case "rejected":
+                        paperStatus = "rejected";
                         break;
-                    case 'assigned':
-                        paperStatus = 'underReview';
+                    case "assigned":
+                        paperStatus = "underReview";
                         break;
                     default:
-                        return res.status(400).json({ message: `Invalid parameter value: ${param}` });
+                        return res
+                            .status(400)
+                            .json({ message: `Invalid parameter value: ${param}` });
                 }
             }
 
@@ -342,33 +369,50 @@ const paperController = {
             });
 
             if (papersList.length === 0) {
-                return res.status(404).json({ message: `No papers found with the specified criteria.` });
+                return res
+                    .status(404)
+                    .json({ message: `No papers found with the specified criteria.` });
             }
 
-            if (param === 'assigned' || (!param && paperId)) {
+            if (param === "assigned" || (!param && paperId)) {
                 const paperIds = papersList.map((paper) => paper.id);
 
                 const reviewersData = await reviewer.findAll({
                     where: {
                         paperId: paperIds,
                     },
-                    attributes: ['paperId', 'sectionHeadId'],
+                    attributes: ["paperId", "sectionHeadId"],
                 });
 
-                const sectionHeadIds = [...new Set(reviewersData.map((review) => review.sectionHeadId))];
+                const sectionHeadIds = [
+                    ...new Set(reviewersData.map((review) => review.sectionHeadId)),
+                ];
 
                 const sectionHeads = await User.findAll({
                     where: {
                         id: sectionHeadIds,
                     },
-                    attributes: ['id', 'title', 'firstName', 'lastName', 'country', 'specialization', 'affiliation', 'email', 'phone', 'role'],
+                    attributes: [
+                        "id",
+                        "title",
+                        "firstName",
+                        "lastName",
+                        "country",
+                        "specialization",
+                        "affiliation",
+                        "email",
+                        "phone",
+                        "role",
+                    ],
                 });
 
                 const papersWithReviewers = papersList.map((paper) => {
                     const assignedReviewers = reviewersData
                         .filter((review) => review.paperId === paper.id)
                         .map((review) => {
-                            const sectionHead = sectionHeads.find((sh) => sh.id === review.sectionHeadId);
+                            const sectionHead = sectionHeads.find(
+                                (sh) => sh.id === review.sectionHeadId
+                            );
                             return sectionHead
                                 ? {
                                     id: sectionHead.id,
@@ -415,8 +459,10 @@ const paperController = {
                 },
             });
         } catch (error) {
-            console.error('Error while fetching papers based on status', error);
-            return res.status(500).json({ message: 'Server error', error: error.message });
+            console.error("Error while fetching papers based on status", error);
+            return res
+                .status(500)
+                .json({ message: "Server error", error: error.message });
         }
     },
     getAssignedPapersOfSectionHead: async (req, res) => {
@@ -427,9 +473,13 @@ const paperController = {
                 return res.status(400).json({ message: "sectionHeadId is required" });
             }
 
-            const validStatuses = ['assigned', 'accepted', 'rejected'];
+            const validStatuses = ["assigned", "accepted", "rejected"];
             if (status && !validStatuses.includes(status)) {
-                return res.status(400).json({ message: `Invalid status. Valid statuses are: ${validStatuses.join(', ')}` });
+                return res.status(400).json({
+                    message: `Invalid status. Valid statuses are: ${validStatuses.join(
+                        ", "
+                    )}`,
+                });
             }
 
             const pageOffset = parseInt(offset) || 0;
@@ -442,9 +492,9 @@ const paperController = {
 
             const papersIds = await reviewer.findAll({
                 where: reviewerWhereCondition,
-                attributes: ['paperId'],
+                attributes: ["paperId"],
                 offset: pageOffset,
-                limit: pageLimit
+                limit: pageLimit,
             });
 
             const sectionHeadDetails = await User.findByPk(sectionHeadId);
@@ -457,28 +507,28 @@ const paperController = {
                 return res.status(200).json({
                     sectionHead: {
                         ...sectionHeadDetails.toJSON(),
-                        totalAssignedPapers: 0
+                        totalAssignedPapers: 0,
                     },
                     assignedPapers: [],
                     pagination: {
                         offset: pageOffset,
                         limit: pageLimit,
-                        total: 0
-                    }
+                        total: 0,
+                    },
                 });
             }
 
-            const paperIds = papersIds.map(paper => paper.paperId);
+            const paperIds = papersIds.map((paper) => paper.paperId);
 
             const paperDetails = await papers.findAll({
                 where: {
                     id: {
-                        [Op.in]: paperIds
-                    }
-                }
+                        [Op.in]: paperIds,
+                    },
+                },
             });
 
-            const formattedPaperDetails = paperDetails.map(paper => ({
+            const formattedPaperDetails = paperDetails.map((paper) => ({
                 mainManuscript: paper.mainManuscript,
                 coverLetter: paper.coverLetter,
                 supplementaryFile: paper.supplementaryFile,
@@ -501,28 +551,30 @@ const paperController = {
                 apcs: paper.apcs,
                 studiedAndUnderstood: paper.studiedAndUnderstood,
                 created_at: paper.createdAt,
-                updated_at: paper.updatedAt
+                updated_at: paper.updatedAt,
             }));
 
             const totalAssignedPapers = await reviewer.count({
-                where: reviewerWhereCondition
+                where: reviewerWhereCondition,
             });
 
             return res.status(200).json({
                 sectionHead: {
                     ...sectionHeadDetails.toJSON(),
-                    totalAssignedPapers
+                    totalAssignedPapers,
                 },
                 assignedPapers: formattedPaperDetails,
                 pagination: {
                     offset: pageOffset,
                     limit: pageLimit,
-                    total: totalAssignedPapers
-                }
+                    total: totalAssignedPapers,
+                },
             });
-
         } catch (error) {
-            console.error("Error while getting assigned papers and section head details", error);
+            console.error(
+                "Error while getting assigned papers and section head details",
+                error
+            );
             return res.status(500).json({ message: "Internal server error" });
         }
     },
@@ -556,9 +608,9 @@ const paperController = {
                 include: [
                     {
                         model: User,
-                        as: 'author',
+                        as: "author",
                         where: userConditions,
-                        attributes: ['id', 'title', 'firstName', 'lastName'],
+                        attributes: ["id", "title", "firstName", "lastName"],
                     },
                 ],
                 offset,
@@ -566,7 +618,9 @@ const paperController = {
             });
 
             if (!foundPapers || foundPapers.length === 0) {
-                return res.status(404).json({ message: "No papers found matching the criteria." });
+                return res
+                    .status(404)
+                    .json({ message: "No papers found matching the criteria." });
             }
 
             return res.status(200).json({
@@ -581,9 +635,11 @@ const paperController = {
             });
         } catch (error) {
             console.error("Error while fetching papers for author:", error);
-            return res.status(500).json({ message: "Internal server error", error: error.message });
+            return res
+                .status(500)
+                .json({ message: "Internal server error", error: error.message });
         }
-    }
+    },
 };
 
 module.exports = paperController;

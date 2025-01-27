@@ -131,7 +131,6 @@ const paperController = {
                 .json({ message: "Server error", error: error.message });
         }
     },
-
     getAllPapers: async (req, res) => {
         try {
             const { id, type, offset, limit } = req.query;
@@ -191,7 +190,6 @@ const paperController = {
                 .json({ message: "Server error", error: error.message });
         }
     },
-
     updatePaperStatusForCheifEditor: async (req, res) => {
         try {
             const { paperID } = req.params;
@@ -477,9 +475,7 @@ const paperController = {
             const validStatuses = ["assigned", "accepted", "rejected"];
             if (status && !validStatuses.includes(status)) {
                 return res.status(400).json({
-                    message: `Invalid status. Valid statuses are: ${validStatuses.join(
-                        ", "
-                    )}`,
+                    message: `Invalid status. Valid statuses are: ${validStatuses.join(", ")}`,
                 });
             }
 
@@ -491,9 +487,9 @@ const paperController = {
                 reviewerWhereCondition.status = status;
             }
 
-            const papersIds = await reviewer.findAll({
+            const papersData = await reviewer.findAll({
                 where: reviewerWhereCondition,
-                attributes: ["paperId"],
+                attributes: ["paperId", "status"],
                 offset: pageOffset,
                 limit: pageLimit,
             });
@@ -504,7 +500,7 @@ const paperController = {
                 return res.status(404).json({ message: "Section head not found" });
             }
 
-            if (papersIds.length === 0) {
+            if (papersData.length === 0) {
                 return res.status(200).json({
                     sectionHead: {
                         ...sectionHeadDetails.toJSON(),
@@ -519,7 +515,10 @@ const paperController = {
                 });
             }
 
-            const paperIds = papersIds.map((paper) => paper.paperId);
+            const paperIds = papersData.map((entry) => entry.paperId);
+            const reviewerStatuses = Object.fromEntries(
+                papersData.map((entry) => [entry.paperId, entry.status])
+            );
 
             const paperDetails = await papers.findAll({
                 where: {
@@ -548,6 +547,7 @@ const paperController = {
                 authorsConflict: paper.authorsConflict,
                 dataAvailability: paper.dataAvailability,
                 paperStatus: paper.paperStatus,
+                reviewerStatus: reviewerStatuses[paper.id], // Adding status from reviewer table
                 statusHistory: paper.statusHistory || [],
                 apcs: paper.apcs,
                 studiedAndUnderstood: paper.studiedAndUnderstood,

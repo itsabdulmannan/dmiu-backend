@@ -88,7 +88,7 @@ authRouter.post('/login-author', authController.loginAuthor);
  *       400:
  *         description: Bad Request
  */
-authRouter.post('/login-admin', authController.loginAdmin);
+authRouter.post('/login-admin', authenticate, authorize('cheifEditor', 'sectionHead'), authController.loginAdmin);
 
 /**
  * @swagger

@@ -52,10 +52,10 @@ const paperController = {
                     .status(400)
                     .json({ message: "Invalid JSON format for authors or reviewers." });
             }
-            if (!Array.isArray(authors) || authors.length < 3) {
+            if (!Array.isArray(authors) || authors.length < 1) {
                 return res
                     .status(400)
-                    .json({ message: "At least 3 authors are required." });
+                    .json({ message: "At least 1 author is required." });
             }
             for (const author of authors) {
                 if (
@@ -123,7 +123,7 @@ const paperController = {
 
             return res
                 .status(201)
-                .json({ message: "Paper added successfully!", paper: newPaper });
+                .json({ status: true, message: "Paper added successfully!", paper: newPaper });
         } catch (error) {
             console.error(error);
             return res
@@ -547,7 +547,7 @@ const paperController = {
                 authorsConflict: paper.authorsConflict,
                 dataAvailability: paper.dataAvailability,
                 paperStatus: paper.paperStatus,
-                reviewerStatus: reviewerStatuses[paper.id], // Adding status from reviewer table
+                reviewerStatus: reviewerStatuses[paper.id],
                 statusHistory: paper.statusHistory || [],
                 apcs: paper.apcs,
                 studiedAndUnderstood: paper.studiedAndUnderstood,
